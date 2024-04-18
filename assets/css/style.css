@@ -9,6 +9,45 @@
 /*--------------------------------------------------------------
 # General
 --------------------------------------------------------------*/
+
+.cookies-msg{
+  width: 80%;
+  background-color: #fff;
+  position: fixed;
+  bottom: 5%;
+  left: 50%;
+  transform: translate(-50%);
+  border-radius: 15px;
+  display: none;
+  padding: 20px;
+  text-align: justify;
+}
+
+.cookies-msg.mostrar{
+  display: block;
+}
+
+.cookies-msg .cookies-btn{
+  margin-top: 20px;
+  text-align: center;
+}
+
+.cookies-msg .cookies-btn button{
+  background-color: #000;
+  color: #fff;
+  font-weight: 700;
+  font-size: 18px;
+  padding: 10px 40px;
+  cursor: pointer;
+  transition: .2s;
+  border: none;
+  border-radius: 5px;
+}
+
+.cookies-msg .cookies-btn button:hover{
+  transform: scale(0.9);
+}
+
 body {
   background: #fff;
   color: #444;

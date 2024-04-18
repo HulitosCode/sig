@@ -34,7 +34,6 @@
   <link a
   <!-- Template Main CSS File -->
   <link href="assets/css/style.css" rel="stylesheet">
-  !-- Canonical Link -->
   <link rel="canonical" href="https://sig-group.co.mz">
   <!-- Pré-busca de recursos críticos -->
   <link rel="preload" href="fonte.woff2" as="font" type="font/woff2">
@@ -54,6 +53,27 @@
   gtag('js', new Date());
 
   gtag('config', 'G-NJFDXRN3XT');
+</script>
+
+
+<div class="cookies-msg" id="cookies-msg">
+  <div class="cookies-txt">
+      <p>Este site utiliza cookies para melhorar a sua experiência. A SIG Group, uma empresa de importação e exportação, utiliza cookies e tecnologias similares para entender como você utiliza o nosso site e para melhorar a sua experiência de navegação. Ao clicar em "Aceito", você concorda com o uso de cookies. Para mais informações, consulte nossa <span class="privacy-link" onclick="mostrarPoliticaPrivacidade()"><a href="politica_de_privacidade.html">Política de Privacidade</a></span>.</p>
+  </div>
+  <div class="cookies-btn">
+      <button onclick="aceito()">Aceito</button>
+  </div>
+</div><!--cookies-msg-->
+
+<script>
+  function aceito() {
+      document.getElementById("cookies-msg").style.display = "none";
+  }
+
+  function mostrarPoliticaPrivacidade() {
+      // Substitua a URL abaixo pela URL real da sua política de privacidade
+      window.location.href = "politica_de_privacidade.html";
+  }
 </script>
 
   <!-- ======= Header ======= -->
@@ -298,6 +318,7 @@
     <div class="container">
       <div class="copyright">
         &copy; Copyright <strong>HulitosCode</strong>. All Rights Reserved
+        <li><a class="nav-link scrollto" href="politica_de_privacidade.html">Política de Privacidade</a></li>
       </div>
     </div>
   </footer><!-- End Footer -->
