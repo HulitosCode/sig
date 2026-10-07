@@ -1,52 +1,151 @@
 generator client {
-  provider = "prisma-client-js"
+  provider = "prisma-client"
+  output   = "../lib/generated/prisma"
 }
 
 datasource db {
-  provider = "sqlite"
-  url      = env("DATABASE_URL")
+  provider = "postgresql"
 }
+
+// ---------------------------------------------------------------------------
+// Better Auth
+// ---------------------------------------------------------------------------
 
 model User {
-  id            Int            @id @default(autoincrement())
-  email         String         @unique
-  senha         String
-  nome          String
-  telefone      String
-  whatsapp      String?
-  role          String         @default("usuario")
-  transportador Transportador?
-  fornecedor    Fornecedor?
-  createdAt     DateTime       @default(now())
+  id            String   @id
+  name          String
+  email         String   @unique
+  emailVerified Boolean  @default(false)
+  image         String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @default(now())
+
+  // FRETA: papel da conta
+  role String @default("motorista") // "admin" | "motorista"
+
+  motorista Motorista?
+  sessions  Session[]
+  accounts  Account[]
 }
 
-model Transportador {
-  id          Int      @id @default(autoincrement())
-  userId      Int      @unique
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  bi          String
-  tipoCarro   String
-  categoria   String
-  matricula   String
-  cargaMax    String
-  precoKm     String?
-  viagemLonga Boolean  @default(false)
-  zonas       String?
-  obs         String?
-  status      String   @default("pendente")
-  pagamento   Boolean  @default(false)
-  createdAt   DateTime @default(now())
-}
-
-model Fornecedor {
-  id        Int      @id @default(autoincrement())
-  userId    Int      @unique
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  nif       String
-  provincia String
-  produtos  String
-  obs       String?
-  status    String   @default("pendente")
-  pagamento Boolean  @default(false)
+model Session {
+  id        String   @id
+  expiresAt DateTime
+  token     String   @unique
   createdAt DateTime @default(now())
+  updatedAt DateTime @default(now())
+  ipAddress String?
+  userAgent String?
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model Account {
+  id                    String    @id
+  accountId             String
+  providerId            String
+  userId                String
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  accessToken           String?
+  refreshToken          String?
+  idToken               String?
+  accessTokenExpiresAt  DateTime?
+  refreshTokenExpiresAt DateTime?
+  scope                 String?
+  password              String?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @default(now())
+
+  @@index([userId])
+}
+
+model Verification {
+  id         String   @id
+  identifier String
+  value      String
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @default(now())
+}
+
+// ---------------------------------------------------------------------------
+// FRETA — domínio
+// ---------------------------------------------------------------------------
+
+model Motorista {
+  id     Int    @id @default(autoincrement())
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  fotoUrl        String?
+  telefone       String // usado no botão "Ligar"
+  whatsapp       String? // usado no botão "WhatsApp" (fallback: telefone)
+  praca          String // praça/zona: Maputo, Matola, Zimpeto...
+  tipoViatura    String // ex.: Toyota Dyna, camião, carrinha
+  matricula      String
+  cargaMax       String // ex.: "2 toneladas"
+  servicos       String[] // mudanca | mercadoria | moveis | construcao | pesada | outro
+  precoKm        String?
+  observacoes    String?
+
+  status         String @default("pendente") // pendente | ativo | bloqueado
+  disponibilidade String @default("disponivel") // disponivel | ocupado | indisponivel
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  pagamentos Pagamento[]
+  avaliacoes Avaliacao[]
+  pedidos    Pedido[]
+}
+
+model Pagamento {
+  id           Int      @id @default(autoincrement())
+  motoristaId  Int
+  motorista    Motorista @relation(fields: [motoristaId], references: [id], onDelete: Cascade)
+
+  valor        Int       @default(120) // MT/mês
+  status       String    @default("pendente") // pendente | confirmado
+  pagoEm       DateTime?
+  confirmadoPor String? // userId do admin
+  validoAte    DateTime? // fim do período pago
+  criadoEm     DateTime  @default(now())
+
+  @@index([motoristaId])
+}
+
+model Pedido {
+  id             Int        @id @default(autoincrement())
+
+  tipoCarga      String // mudanca | mercadoria | moveis | construcao | pesada | outro
+  praca          String // praça de origem (para filtrar motoristas)
+  origem         String // detalhe da origem (bairro, rua)
+  destino        String // para onde vai
+  veiculoSugerido String?
+  contacto       String? // telefone opcional do cliente
+  motoristaId    Int?      // motorista específico contactado
+  motorista      Motorista? @relation(fields: [motoristaId], references: [id], onDelete: SetNull)
+
+  criadoEm       DateTime  @default(now())
+
+  avaliacoes Avaliacao[]
+
+  @@index([praca, criadoEm])
+  @@index([motoristaId])
+}
+
+model Avaliacao {
+  id          Int       @id @default(autoincrement())
+  motoristaId Int
+  motorista   Motorista @relation(fields: [motoristaId], references: [id], onDelete: Cascade)
+  pedidoId    Int?
+  pedido      Pedido?   @relation(fields: [pedidoId], references: [id], onDelete: SetNull)
+
+  nota        Int // 1..5
+  comentario  String?
+  criadoEm    DateTime  @default(now())
+
+  @@index([motoristaId])
 }

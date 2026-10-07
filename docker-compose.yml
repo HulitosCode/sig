@@ -1,0 +1,16 @@
+services:
+  postgres:
+    image: postgres:17
+    container_name: freta-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: freta
+      POSTGRES_PASSWORD: freta-pass
+      POSTGRES_DB: freta
+    ports:
+      - "5432:5432"
+    volumes:
+      - freta_postgres_data:/var/lib/postgresql/data
+
+volumes:
+  freta_postgres_data:
