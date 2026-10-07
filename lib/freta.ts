@@ -38,7 +38,21 @@ export const DISPONIBILIDADES = [
   { value: 'indisponivel', label: 'Indisponível' },
 ] as const
 
-export const VALOR_MENSALIDADE_MT = 120
+export const VALOR_MENSALIDADE_MT = 480
+export const VALOR_CADASTRO_MT = 120
+
+// Contactos de suporte FRETA (chamadas e WhatsApp).
+export const SUPORTE = {
+  telefone: '843779669',
+  telefoneFormatado: '843 779 669',
+  telefoneIntl: '+258843779669',
+  whatsapp: 'https://wa.me/258843779669',
+} as const
+
+// Formata valores em MT com ponto de milhar (ex.: 1440 → "1.440").
+export function formatMt(valor: number): string {
+  return String(valor).replace(/\B(?=(\d{3})+(?!\d))/g, '.')
+}
 
 export const SERVICO_LABELS: Record<string, string> = Object.fromEntries(
   SERVICOS.map((s) => [s.value, s.label])

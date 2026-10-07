@@ -1,6 +1,9 @@
 import type { Metadata, Viewport } from "next";
 import { Poppins, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import { ThemeProvider } from "@/components/theme-provider";
+import { TooltipProvider } from "@/components/ui/tooltip";
+import { Toaster } from "@/components/ui/sonner";
 import { PwaRegister } from "@/components/pwa/pwa-register";
 import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
@@ -49,7 +52,10 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#00ff55",
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#00ff55" },
+    { media: "(prefers-color-scheme: dark)", color: "#040404" },
+  ],
   width: "device-width",
   initialScale: 1,
   viewportFit: "cover",
@@ -60,12 +66,23 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     <html
       lang="pt-MZ"
       className={`${poppins.variable} ${geistMono.variable} h-full antialiased`}
+      suppressHydrationWarning
     >
       <body className="min-h-full flex flex-col">
-        <PwaRegister />
-        <SiteHeader />
-        <main className="flex-1">{children}</main>
-        <SiteFooter />
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="system"
+          enableSystem
+          disableTransitionOnChange
+        >
+          <TooltipProvider>
+            <PwaRegister />
+            <SiteHeader />
+            <main className="flex-1">{children}</main>
+            <SiteFooter />
+            <Toaster position="top-right" richColors closeButton />
+          </TooltipProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

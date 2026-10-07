@@ -132,4 +132,10 @@
   html {
     @apply font-sans;
   }
+  /* Rolagem suave para as âncoras da landing (#planos, #como-funciona...). */
+  @media (prefers-reduced-motion: no-preference) {
+    html {
+      scroll-behavior: smooth;
+    }
+  }
 }

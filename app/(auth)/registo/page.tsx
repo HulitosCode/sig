@@ -38,7 +38,7 @@ import {
 } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import { authClient } from "@/lib/auth-client";
-import { SERVICOS, PRACAS } from "@/lib/freta";
+import { SERVICOS, PRACAS, VALOR_CADASTRO_MT, VALOR_MENSALIDADE_MT, formatMt } from "@/lib/freta";
 import { saveMotoristaProfileAction } from "./actions";
 
 const registerSchema = z
@@ -156,7 +156,9 @@ export default function RegistoPage() {
           </CardTitle>
           <CardDescription>
             Obrigado. A nossa equipa vai verificar o seu perfil e confirmar o
-            pagamento da mensalidade (120 MT) para activar a sua conta.
+            pagamento do cadastro ({formatMt(VALOR_CADASTRO_MT)} MT) e da
+            mensalidade ({formatMt(VALOR_MENSALIDADE_MT)} MT/mês) para activar a
+            sua conta.
           </CardDescription>
         </CardHeader>
         <CardContent>

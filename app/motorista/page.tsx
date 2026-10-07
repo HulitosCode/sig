@@ -18,7 +18,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { requireUser } from "@/lib/session";
 import { prisma } from "@/lib/db";
-import { SERVICO_LABELS, VALOR_MENSALIDADE_MT } from "@/lib/freta";
+import { SERVICO_LABELS, SUPORTE, VALOR_MENSALIDADE_MT } from "@/lib/freta";
 import { DisponibilidadeControl } from "./disponibilidade-control";
 
 // Rota autenticada: sempre dinâmica (sessão + dados em tempo real).
@@ -31,10 +31,17 @@ export const metadata: Metadata = {
 const STATUS_LABEL: Record<string, { label: string; classe: string }> = {
   pendente: {
     label: "Aguarda verificação",
-    classe: "bg-yellow-100 text-yellow-800",
+    classe:
+      "bg-amber-100 text-amber-800 dark:bg-amber-500/15 dark:text-amber-400",
   },
-  ativo: { label: "Activo", classe: "bg-green-100 text-green-800" },
-  bloqueado: { label: "Bloqueado", classe: "bg-red-100 text-red-800" },
+  ativo: {
+    label: "Activo",
+    classe: "bg-green-100 text-green-800 dark:bg-primary/15 dark:text-primary",
+  },
+  bloqueado: {
+    label: "Bloqueado",
+    classe: "bg-red-100 text-red-800 dark:bg-red-500/15 dark:text-red-400",
+  },
 };
 
 export default async function MotoristaPage() {
@@ -55,7 +62,7 @@ export default async function MotoristaPage() {
 
   if (!motorista) {
     return (
-      <div className="mx-auto w-full max-w-3xl px-4 py-16 text-center">
+      <div className="mx-auto w-full max-w-3xl py-16 text-center">
         <h1 className="text-2xl font-semibold">Complete o seu perfil</h1>
         <p className="mt-2 text-muted-foreground">
           Ainda não tem perfil de motorista. Crie-o para começar a receber
@@ -92,7 +99,7 @@ export default async function MotoristaPage() {
   const status = STATUS_LABEL[motorista.status] ?? STATUS_LABEL.pendente;
 
   return (
-    <div className="mx-auto w-full max-w-4xl space-y-6 px-4 py-8">
+    <div className="mx-auto w-full max-w-4xl space-y-6">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold">O meu painel</h1>
@@ -105,7 +112,7 @@ export default async function MotoristaPage() {
 
       {/* Estado */}
       {motorista.status !== "ativo" && (
-        <div className="flex items-start gap-3 rounded-lg border border-yellow-300 bg-yellow-50 p-4 text-sm text-yellow-900">
+        <div className="flex items-start gap-3 rounded-lg border border-amber-300 bg-amber-50 p-4 text-sm text-amber-900 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-200">
           <AlertTriangle className="mt-0.5 size-4 shrink-0" />
           <div>
             <p className="font-medium">
@@ -113,7 +120,7 @@ export default async function MotoristaPage() {
             </p>
             <p className="mt-1">
               {motorista.status === "pendente"
-                ? "A equipa FRETA vai verificar os seus dados presencialmente na praça e confirmar o pagamento da mensalidade (120 MT/mês)."
+                ? `A equipa FRETA vai verificar os seus dados presencialmente na praça e confirmar o pagamento da mensalidade (${VALOR_MENSALIDADE_MT} MT/mês).`
                 : "Contacte a administração para desbloquear o seu perfil."}
             </p>
           </div>
@@ -150,12 +157,14 @@ export default async function MotoristaPage() {
             <div className="flex items-center justify-between">
               <span className="text-muted-foreground">Estado</span>
               {mensalidadePaga ? (
-                <span className="flex items-center gap-1 text-green-700">
+                <span className="flex items-center gap-1 text-green-700 dark:text-primary">
                   <CheckCircle2 className="size-4" /> Paga até{" "}
                   {ultimoPagamento?.validoAte?.toLocaleDateString("pt-PT")}
                 </span>
               ) : (
-                <span className="text-yellow-700">Por confirmar</span>
+                <span className="text-amber-700 dark:text-amber-400">
+                  Por confirmar
+                </span>
               )}
             </div>
             <p className="text-xs text-muted-foreground">
@@ -168,8 +177,15 @@ export default async function MotoristaPage() {
 
       {/* Perfil */}
       <Card>
-        <CardHeader>
+        <CardHeader className="flex flex-row items-center justify-between space-y-0">
           <CardTitle className="text-base">O meu perfil</CardTitle>
+          <Button
+            size="sm"
+            variant="outline"
+            render={<Link href="/motorista/perfil" />}
+          >
+            Editar perfil
+          </Button>
         </CardHeader>
         <CardContent className="space-y-3 text-sm">
           <div className="grid gap-3 sm:grid-cols-2">
@@ -218,7 +234,7 @@ export default async function MotoristaPage() {
       </Card>
 
       {/* Histórico de pedidos recebidos */}
-      <Card>
+      <Card id="pedidos" className="scroll-mt-20">
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-base">
             <Inbox className="size-4 text-primary-text" /> Pedidos recebidos (
@@ -305,7 +321,7 @@ export default async function MotoristaPage() {
       </Card>
 
       {/* Avaliações recebidas */}
-      <Card>
+      <Card id="avaliacoes" className="scroll-mt-20">
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-base">
             <Star className="size-4 text-primary-text" /> Avaliações (
@@ -347,9 +363,31 @@ export default async function MotoristaPage() {
       </Card>
 
       <Separator />
-      <p className="text-center text-sm text-muted-foreground">
-        Dúvidas? Contacte a administração da FRETA.
-      </p>
+      <div className="flex flex-col items-center gap-2 text-center text-sm text-muted-foreground">
+        <p>Dúvidas? Contacte a administração da FRETA.</p>
+        <div className="flex gap-2">
+          <Button
+            size="sm"
+            variant="outline"
+            render={<a href={`tel:${SUPORTE.telefoneIntl}`} />}
+          >
+            <Phone className="size-3.5" /> {SUPORTE.telefoneFormatado}
+          </Button>
+          <Button
+            size="sm"
+            variant="outline"
+            render={
+              <a
+                href={SUPORTE.whatsapp}
+                target="_blank"
+                rel="noopener noreferrer"
+              />
+            }
+          >
+            <MessageCircle className="size-3.5" /> WhatsApp
+          </Button>
+        </div>
+      </div>
     </div>
   );
 }

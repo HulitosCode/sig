@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Truck, Clock, Inbox, Banknote, MapPin } from "lucide-react";
+import { formatMt, VALOR_MENSALIDADE_MT } from "@/lib/freta";
 
 // Rota de admin: sempre dinâmica (sessão + dados em tempo real).
 export const instant = false;
@@ -72,6 +73,13 @@ export default async function AdminHomePage() {
 
   return (
     <div className="space-y-6">
+      <div>
+        <h1 className="text-2xl font-bold tracking-tight">Painel</h1>
+        <p className="text-sm text-muted-foreground">
+          Visão geral do FRETA — motoristas, pedidos e receitas.
+        </p>
+      </div>
+
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {stats.map((stat) => (
           <Card key={stat.titulo}>
@@ -139,7 +147,7 @@ export default async function AdminHomePage() {
               <span className="text-muted-foreground">
                 Mensalidade unitária
               </span>
-              <Badge variant="secondary">120 MT</Badge>
+              <Badge variant="secondary">{formatMt(VALOR_MENSALIDADE_MT)} MT</Badge>
             </div>
           </CardContent>
         </Card>

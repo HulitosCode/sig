@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { connection } from "next/server";
+import Link from "next/link";
 import { prisma } from "@/lib/db";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
@@ -11,20 +12,20 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { MotoristaAccoes } from "./motorista-accoes";
-import { SERVICO_LABELS } from "@/lib/freta";
+import {
+  MotoristaAccoes,
+  STATUS_MOTORISTA,
+  type MotoristaLinha,
+} from "./motorista-accoes";
+import { CriarMotoristaDialog } from "./criar-motorista-dialog";
+import { SERVICO_LABELS, SUPORTE } from "@/lib/freta";
+import { MessageCircle, Phone } from "lucide-react";
 
 // Rota de admin: sempre dinâmica (sessão + dados em tempo real).
 export const instant = false;
 
 export const metadata: Metadata = {
   title: "Motoristas",
-};
-
-const STATUS_LABEL: Record<string, { label: string; classe: string }> = {
-  pendente: { label: "Pendente", classe: "bg-yellow-100 text-yellow-800" },
-  ativo: { label: "Activo", classe: "bg-green-100 text-green-800" },
-  bloqueado: { label: "Bloqueado", classe: "bg-red-100 text-red-800" },
 };
 
 export default async function AdminMotoristasPage({
@@ -48,6 +49,33 @@ export default async function AdminMotoristasPage({
     take: 200,
   });
 
+  const linhas: MotoristaLinha[] = motoristas.map((m) => {
+    const pg = m.pagamentos[0];
+    return {
+      id: m.id,
+      status: m.status,
+      telefone: m.telefone,
+      whatsapp: m.whatsapp,
+      praca: m.praca,
+      tipoViatura: m.tipoViatura,
+      matricula: m.matricula,
+      cargaMax: m.cargaMax,
+      servicos: m.servicos,
+      precoKm: m.precoKm,
+      observacoes: m.observacoes,
+      createdAt: m.createdAt.toISOString(),
+      user: m.user,
+      ultimoPagamento: pg
+        ? {
+            valor: pg.valor,
+            status: pg.status,
+            pagoEm: pg.pagoEm?.toISOString() ?? null,
+            validoAte: pg.validoAte?.toISOString() ?? null,
+          }
+        : null,
+    };
+  });
+
   const filtros = [
     { valor: "", label: "Todos" },
     { valor: "pendente", label: "Pendentes" },
@@ -56,20 +84,55 @@ export default async function AdminMotoristasPage({
   ];
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-5">
+      {/* Cabeçalho + criar */}
+      <div className="flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight">Motoristas</h1>
+          <p className="text-sm text-muted-foreground">
+            {linhas.length} {linhas.length === 1 ? "perfil" : "perfis"} ·
+            verificação, mensalidades e contactos.
+          </p>
+        </div>
+        <div className="flex items-center gap-2">
+          <a
+            href={`tel:${SUPORTE.telefoneIntl}`}
+            className="inline-flex h-8 items-center gap-1.5 rounded-md border px-2.5 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+          >
+            <Phone className="size-3.5" />
+            <span className="hidden sm:inline">{SUPORTE.telefoneFormatado}</span>
+          </a>
+          <a
+            href={SUPORTE.whatsapp}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex h-8 items-center gap-1.5 rounded-md border px-2.5 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+          >
+            <MessageCircle className="size-3.5" />
+            <span className="hidden sm:inline">WhatsApp</span>
+          </a>
+          <CriarMotoristaDialog />
+        </div>
+      </div>
+
+      {/* Filtros */}
       <div className="flex flex-wrap gap-2">
         {filtros.map((filtro) => (
-          <a
+          <Link
             key={filtro.valor}
-            href={filtro.valor ? `/admin/motoristas?status=${filtro.valor}` : "/admin/motoristas"}
+            href={
+              filtro.valor
+                ? `/admin/motoristas?status=${filtro.valor}`
+                : "/admin/motoristas"
+            }
             className={`rounded-full border px-3 py-1.5 text-sm font-medium transition-colors ${
               (status ?? "") === filtro.valor
                 ? "border-primary bg-primary text-primary-foreground"
-                : "text-muted-foreground hover:bg-muted"
+                : "text-muted-foreground hover:bg-muted hover:text-foreground"
             }`}
           >
             {filtro.label}
-          </a>
+          </Link>
         ))}
       </div>
 
@@ -80,32 +143,41 @@ export default async function AdminMotoristasPage({
               <TableHeader>
                 <TableRow>
                   <TableHead>Motorista</TableHead>
-                  <TableHead className="hidden md:table-cell">Veículo</TableHead>
-                  <TableHead className="hidden md:table-cell">Praça</TableHead>
-                  <TableHead>Serviços</TableHead>
-                  <TableHead>Mensalidade</TableHead>
+                  <TableHead className="hidden md:table-cell">
+                    Veículo
+                  </TableHead>
+                  <TableHead className="hidden md:table-cell">
+                    Praça
+                  </TableHead>
+                  <TableHead className="hidden lg:table-cell">
+                    Serviços
+                  </TableHead>
+                  <TableHead className="hidden lg:table-cell">
+                    Mensalidade
+                  </TableHead>
                   <TableHead>Estado</TableHead>
                   <TableHead className="text-right">Acções</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {motoristas.length === 0 && (
+                {linhas.length === 0 && (
                   <TableRow>
                     <TableCell
                       colSpan={7}
-                      className="py-8 text-center text-muted-foreground"
+                      className="py-10 text-center text-muted-foreground"
                     >
                       Sem motoristas para este filtro.
                     </TableCell>
                   </TableRow>
                 )}
-                {motoristas.map((m) => {
-                  const ultimoPagamento = m.pagamentos[0];
+                {linhas.map((m) => {
+                  const pg = m.ultimoPagamento;
                   const pago =
-                    ultimoPagamento?.status === "confirmado" &&
-                    ultimoPagamento.validoAte != null &&
-                    ultimoPagamento.validoAte > new Date();
-                  const st = STATUS_LABEL[m.status] ?? STATUS_LABEL.pendente;
+                    pg?.status === "confirmado" &&
+                    pg.validoAte != null &&
+                    new Date(pg.validoAte) > new Date();
+                  const st =
+                    STATUS_MOTORISTA[m.status] ?? STATUS_MOTORISTA.pendente;
 
                   return (
                     <TableRow key={m.id}>
@@ -127,26 +199,33 @@ export default async function AdminMotoristasPage({
                       <TableCell className="hidden md:table-cell">
                         {m.praca}
                       </TableCell>
-                      <TableCell>
+                      <TableCell className="hidden lg:table-cell">
                         <div className="flex flex-wrap gap-1">
                           {m.servicos.slice(0, 3).map((s) => (
-                            <Badge key={s} variant="secondary" className="text-xs">
+                            <Badge
+                              key={s}
+                              variant="secondary"
+                              className="text-xs"
+                            >
                               {SERVICO_LABELS[s] ?? s}
                             </Badge>
                           ))}
                         </div>
                       </TableCell>
-                      <TableCell>
+                      <TableCell className="hidden lg:table-cell">
                         {pago ? (
-                          <Badge className="bg-green-100 text-green-800">
+                          <Badge className="bg-green-100 text-green-800 dark:bg-primary/15 dark:text-primary">
                             Paga até{" "}
-                            {ultimoPagamento?.validoAte?.toLocaleDateString(
+                            {new Date(pg!.validoAte!).toLocaleDateString(
                               "pt-PT",
                               { day: "2-digit", month: "2-digit" }
                             )}
                           </Badge>
                         ) : (
-                          <Badge variant="outline" className="text-yellow-700">
+                          <Badge
+                            variant="outline"
+                            className="border-amber-200 text-amber-700 dark:border-amber-500/30 dark:text-amber-400"
+                          >
                             Por pagar
                           </Badge>
                         )}
@@ -155,7 +234,7 @@ export default async function AdminMotoristasPage({
                         <Badge className={st.classe}>{st.label}</Badge>
                       </TableCell>
                       <TableCell className="text-right">
-                        <MotoristaAccoes motoristaId={m.id} status={m.status} />
+                        <MotoristaAccoes motorista={m} />
                       </TableCell>
                     </TableRow>
                   );
