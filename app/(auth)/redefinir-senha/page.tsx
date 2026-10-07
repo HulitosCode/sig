@@ -24,6 +24,8 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { FormError } from "@/components/form-error";
+import { PasswordInput } from "@/components/password-input";
 import { resetPasswordAction } from "../actions";
 
 const schema = z
@@ -52,6 +54,7 @@ export default function RedefinirSenhaPage() {
 function RedefinirForm() {
   const searchParams = useSearchParams();
   const tokenFromUrl = searchParams.get("token") ?? "";
+  const hasErrorParam = searchParams.get("error") === "INVALID_TOKEN";
 
   const [state, formAction, isPending] = useActionState(resetPasswordAction, {});
 
@@ -74,7 +77,7 @@ function RedefinirForm() {
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <CheckCircle2 className="size-5 text-green-600" />
+            <CheckCircle2 className="size-5 text-primary-text" />
             Palavra-passe redefinida
           </CardTitle>
           <CardDescription>{state.message}</CardDescription>
@@ -98,17 +101,19 @@ function RedefinirForm() {
       </CardHeader>
       <CardContent>
         {!tokenFromUrl && (
-          <p className="mb-4 rounded-md border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive">
-            Link de recuperação inválido. Peça um novo em{" "}
+          <FormError className="mb-4">
+            {hasErrorParam
+              ? "O link de recuperação é inválido ou expirou. Peça um novo em "
+              : "Link de recuperação inválido. Peça um novo em "}
             <Link href="/esqueci-senha" className="underline">
               esquecer a palavra-passe
             </Link>
             .
-          </p>
+          </FormError>
         )}
 
         <Form {...form}>
-          <form action={formAction} className="space-y-4">
+          <form action={formAction} noValidate className="space-y-4">
             <FormField
               control={form.control}
               name="token"
@@ -127,9 +132,9 @@ function RedefinirForm() {
                 <FormItem>
                   <FormLabel>Nova palavra-passe</FormLabel>
                   <FormControl>
-                    <Input
-                      type="password"
+                    <PasswordInput
                       autoComplete="new-password"
+                      autoFocus
                       {...field}
                     />
                   </FormControl>
@@ -144,8 +149,7 @@ function RedefinirForm() {
                 <FormItem>
                   <FormLabel>Confirmar palavra-passe</FormLabel>
                   <FormControl>
-                    <Input
-                      type="password"
+                    <PasswordInput
                       autoComplete="new-password"
                       {...field}
                     />
@@ -155,11 +159,9 @@ function RedefinirForm() {
               )}
             />
 
-            {state?.message && !state.success && (
-              <p className="text-sm text-destructive" role="alert">
-                {state.message}
-              </p>
-            )}
+            <FormError>
+              {state?.success ? null : state?.message}
+            </FormError>
 
             <Button
               type="submit"
@@ -167,7 +169,7 @@ function RedefinirForm() {
               disabled={isPending || !tokenFromUrl}
             >
               {isPending && <Loader2 className="size-4 animate-spin" />}
-              Redefinir palavra-passe
+              {isPending ? "A redefinir…" : "Redefinir palavra-passe"}
             </Button>
           </form>
         </Form>

@@ -125,7 +125,7 @@ export default async function MotoristaPage() {
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-base">
-              <Clock className="size-4 text-primary" /> O meu estado
+              <Clock className="size-4 text-primary-text" /> O meu estado
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -139,7 +139,7 @@ export default async function MotoristaPage() {
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-base">
-              <CreditCard className="size-4 text-primary" /> Mensalidade
+              <CreditCard className="size-4 text-primary-text" /> Mensalidade
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-2 text-sm">
@@ -221,7 +221,7 @@ export default async function MotoristaPage() {
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-base">
-            <Inbox className="size-4 text-primary" /> Pedidos recebidos (
+            <Inbox className="size-4 text-primary-text" /> Pedidos recebidos (
             {pedidos.length})
           </CardTitle>
         </CardHeader>
@@ -308,7 +308,7 @@ export default async function MotoristaPage() {
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-base">
-            <Star className="size-4 text-primary" /> Avaliações (
+            <Star className="size-4 text-primary-text" /> Avaliações (
             {motorista.avaliacoes.length})
           </CardTitle>
         </CardHeader>

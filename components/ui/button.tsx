@@ -1,5 +1,6 @@
 import { Button as ButtonPrimitive } from "@base-ui/react/button"
 import { cva, type VariantProps } from "class-variance-authority"
+import type { ReactElement } from "react"
 import { cn } from "cn"
 
 const buttonVariants = cva(
@@ -16,7 +17,7 @@ const buttonVariants = cva(
           "hover:bg-muted hover:text-foreground aria-expanded:bg-muted aria-expanded:text-foreground dark:hover:bg-muted/50",
         destructive:
           "bg-destructive/10 text-destructive hover:bg-destructive/20 focus-visible:border-destructive/40 focus-visible:ring-destructive/20 dark:bg-destructive/20 dark:hover:bg-destructive/30 dark:focus-visible:ring-destructive/40",
-        link: "text-primary underline-offset-4 hover:underline",
+        link: "text-primary-text underline-offset-4 hover:underline",
       },
       size: {
         default:
@@ -43,11 +44,20 @@ function Button({
   className,
   variant = "default",
   size = "default",
+  render,
   ...props
 }: ButtonPrimitive.Props & VariantProps<typeof buttonVariants>) {
+  // Quando `render` substitui o elemento final por algo que não é um
+  // <button> (ex.: <Link> → <a>), o Base UI exige nativeButton={false}
+  // para não perder a semântica de botão nativo.
+  const isNativeButton =
+    !render || (render as ReactElement).type === "button"
+
   return (
     <ButtonPrimitive
       data-slot="button"
+      nativeButton={!isNativeButton ? false : undefined}
+      render={render}
       className={cn(buttonVariants({ variant, size, className }))}
       {...props}
     />

@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
@@ -41,7 +42,10 @@ export function UserMenu({ user }: { user: MenuUser }) {
         <span className="max-w-24 truncate">{user.name}</span>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-56">
-        <DropdownMenuLabel className="truncate">{user.email}</DropdownMenuLabel>
+        {/* Menu.GroupLabel exige um Group ancestral (Base UI). */}
+        <DropdownMenuGroup>
+          <DropdownMenuLabel className="truncate">{user.email}</DropdownMenuLabel>
+        </DropdownMenuGroup>
         <DropdownMenuSeparator />
         <DropdownMenuItem render={<Link href="/motorista" />}>
           <LayoutDashboard className="size-4" />

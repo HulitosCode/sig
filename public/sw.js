@@ -1,6 +1,6 @@
 /* Service Worker do FRETA — cache conservadora, apenas de assets públicos. */
 
-const CACHE_VERSION = 'freta-cache-v1'
+const CACHE_VERSION = 'freta-cache-v2'
 const STATIC_CACHE = `${CACHE_VERSION}-static`
 const OFFLINE_URL = '/offline'
 

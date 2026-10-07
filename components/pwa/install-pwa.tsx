@@ -152,7 +152,7 @@ function InstallDialogContent({
     <DialogContent className="sm:max-w-md">
       <DialogHeader>
         <DialogTitle className="flex items-center gap-2">
-          <CheckCircle2 className="size-5 text-primary" />
+          <CheckCircle2 className="size-5 text-primary-text" />
           Instalar a aplicação FRETA
         </DialogTitle>
         <DialogDescription>

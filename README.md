@@ -12,6 +12,12 @@ Marketplace PWA que liga clientes a motoristas verificados em Moçambique — pa
 - **Tailwind CSS v4** + **shadcn/ui** (estilo `base`, Base UI) + **react-hook-form** + **zod**
 - **PWA**: manifest + service worker com cache conservadora
 
+## Marca visual
+
+- **Cor principal:** `#00FF55` (neon — fundos, botões e destaques, com texto preto) e `#00792B` (verde escuro para texto/ícones sobre fundo claro, contraste WCAG AA)
+- **Fonte:** Poppins — sans-serif geométrica carregada via `next/font/google`
+- **Ícones PWA:** placeholders gerados em verde (`scripts/generate-icons.ps1`) — substituir pela arte final mantendo os nomes
+
 ## Arranque rápido
 
 ```bash
@@ -82,7 +88,7 @@ prisma/
 proxy.ts                # protecção de /motorista e /admin (valida sessão e papel)
 docker-compose.yml      # postgres:17 → container freta-db
 public/
-  sw.js                 # service worker (freta-cache-v1)
+  sw.js                 # service worker (freta-cache-v2)
   icons/                # icon-192x192.png, icon-512x512.png, icon-maskable-512x512.png
 ```
 

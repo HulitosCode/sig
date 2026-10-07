@@ -45,7 +45,7 @@ export function IosInstallPrompt() {
     <div className="fixed inset-x-3 bottom-3 z-50 mx-auto max-w-md rounded-xl border bg-card p-4 shadow-lg">
       <div className="flex items-start gap-3">
         <div className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-primary/10">
-          <PlusCircle className="size-5 text-primary" />
+          <PlusCircle className="size-5 text-primary-text" />
         </div>
         <div className="flex-1 text-sm">
           <p className="font-medium">Instalar no iPhone</p>

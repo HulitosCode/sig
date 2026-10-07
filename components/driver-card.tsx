@@ -21,6 +21,7 @@ import {
   recordContactAction,
 } from "@/app/encontrar/actions";
 import { SERVICO_LABELS } from "@/lib/freta";
+import { FormError } from "@/components/form-error";
 
 type DriverCardProps = {
   motorista: MotoristaResultado;
@@ -84,7 +85,7 @@ export function DriverCard({ motorista, pedidoId }: DriverCardProps) {
               className="size-12 rounded-full object-cover"
             />
           ) : (
-            <div className="flex size-12 items-center justify-center rounded-full bg-primary/10 text-sm font-bold text-primary">
+            <div className="flex size-12 items-center justify-center rounded-full bg-primary/10 text-sm font-bold text-primary-text">
               {iniciais}
             </div>
           )}
@@ -96,16 +97,16 @@ export function DriverCard({ motorista, pedidoId }: DriverCardProps) {
                 variant="outline"
                 className={
                   motorista.disponibilidade === "disponivel"
-                    ? "gap-1 text-green-600"
+                    ? "gap-1 border-primary/50 bg-primary/15 text-primary-text"
                     : motorista.disponibilidade === "ocupado"
-                      ? "gap-1 text-yellow-600"
+                      ? "gap-1 border-yellow-500/50 bg-yellow-500/10 text-yellow-700"
                       : "gap-1 text-muted-foreground"
                 }
               >
                 <span
                   className={`size-1.5 rounded-full ${
                     motorista.disponibilidade === "disponivel"
-                      ? "bg-green-500"
+                      ? "bg-primary-text"
                       : motorista.disponibilidade === "ocupado"
                         ? "bg-yellow-500"
                         : "bg-muted-foreground"
@@ -128,7 +129,7 @@ export function DriverCard({ motorista, pedidoId }: DriverCardProps) {
                 <MapPin className="size-3.5" />
                 {motorista.praca}
                 {motorista.naMinhaZona && (
-                  <span className="text-primary">(sua zona)</span>
+                  <span className="text-primary-text">(sua zona)</span>
                 )}
               </span>
               {motorista.notaMedia > 0 ? (
@@ -172,7 +173,7 @@ export function DriverCard({ motorista, pedidoId }: DriverCardProps) {
               <Button
                 size="sm"
                 variant="outline"
-                className="gap-1.5"
+                className="gap-1.5 border-primary/50 bg-primary/10 text-primary-text hover:bg-primary/20 hover:text-primary-text"
                 render={
                   <a
                     href={`https://wa.me/258${whatsapp}`}
@@ -198,7 +199,7 @@ export function DriverCard({ motorista, pedidoId }: DriverCardProps) {
                   </DialogHeader>
 
                   {ratingState?.ok ? (
-                    <p className="text-sm text-green-600">
+                    <p className="text-sm font-medium text-primary-text">
                       Obrigado pela sua avaliação!
                     </p>
                   ) : (
@@ -236,9 +237,7 @@ export function DriverCard({ motorista, pedidoId }: DriverCardProps) {
                       </div>
 
                       {ratingState?.message && (
-                        <p className="text-sm text-destructive" role="alert">
-                          {ratingState.message}
-                        </p>
+                        <FormError>{ratingState.message}</FormError>
                       )}
 
                       <Button
@@ -249,7 +248,7 @@ export function DriverCard({ motorista, pedidoId }: DriverCardProps) {
                         {isRatingPending && (
                           <Loader2 className="size-4 animate-spin" />
                         )}
-                        Enviar avaliação
+                        {isRatingPending ? "A enviar…" : "Enviar avaliação"}
                       </Button>
                     </div>
                   )}

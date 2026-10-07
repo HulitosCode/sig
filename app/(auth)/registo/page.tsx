@@ -27,6 +27,8 @@ import {
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
+import { FormError } from "@/components/form-error";
+import { PasswordInput } from "@/components/password-input";
 import {
   Select,
   SelectContent,
@@ -149,7 +151,7 @@ export default function RegistoPage() {
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <CheckCircle2 className="size-5 text-green-600" />
+            <CheckCircle2 className="size-5 text-primary-text" />
             Registo enviado!
           </CardTitle>
           <CardDescription>
@@ -175,10 +177,25 @@ export default function RegistoPage() {
             ? "Passo 1 de 2 — os seus dados de acesso."
             : "Passo 2 de 2 — o seu veículo e serviços."}
         </CardDescription>
+        {/* Indicador visual de progresso dos 2 passos. */}
+        <div className="mt-1 flex gap-1.5" aria-hidden>
+          <span
+            className={
+              "h-1.5 flex-1 rounded-full transition-colors " +
+              (step === "conta" ? "bg-primary" : "bg-primary/70")
+            }
+          />
+          <span
+            className={
+              "h-1.5 flex-1 rounded-full transition-colors " +
+              (step === "perfil" ? "bg-primary" : "bg-muted")
+            }
+          />
+        </div>
       </CardHeader>
       <CardContent>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+          <form onSubmit={form.handleSubmit(onSubmit)} noValidate className="space-y-4">
             {step === "conta" ? (
               <>
                 <FormField
@@ -191,6 +208,7 @@ export default function RegistoPage() {
                         <Input
                           placeholder="Carlos Mucavele"
                           autoComplete="name"
+                          autoFocus
                           {...field}
                         />
                       </FormControl>
@@ -207,6 +225,8 @@ export default function RegistoPage() {
                         <FormLabel>Telefone</FormLabel>
                         <FormControl>
                           <Input
+                            type="tel"
+                            inputMode="tel"
                             placeholder="84 123 4567"
                             autoComplete="tel"
                             {...field}
@@ -223,7 +243,12 @@ export default function RegistoPage() {
                       <FormItem>
                         <FormLabel>WhatsApp (opcional)</FormLabel>
                         <FormControl>
-                          <Input placeholder="84 123 4567" {...field} />
+                          <Input
+                            type="tel"
+                            inputMode="tel"
+                            placeholder="84 123 4567"
+                            {...field}
+                          />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -256,8 +281,7 @@ export default function RegistoPage() {
                       <FormItem>
                         <FormLabel>Palavra-passe</FormLabel>
                         <FormControl>
-                          <Input
-                            type="password"
+                          <PasswordInput
                             autoComplete="new-password"
                             {...field}
                           />
@@ -273,8 +297,7 @@ export default function RegistoPage() {
                       <FormItem>
                         <FormLabel>Confirmar palavra-passe</FormLabel>
                         <FormControl>
-                          <Input
-                            type="password"
+                          <PasswordInput
                             autoComplete="new-password"
                             {...field}
                           />
@@ -285,15 +308,11 @@ export default function RegistoPage() {
                   />
                 </div>
 
-                {signupError && (
-                  <p className="text-sm text-destructive" role="alert">
-                    {signupError}
-                  </p>
-                )}
+                <FormError>{signupError}</FormError>
 
                 <Button type="submit" className="w-full" disabled={isPending}>
                   {isPending && <Loader2 className="size-4 animate-spin" />}
-                  Continuar
+                  {isPending ? "A criar conta…" : "Continuar"}
                 </Button>
               </>
             ) : (
@@ -451,11 +470,7 @@ export default function RegistoPage() {
                   )}
                 />
 
-                {profileResult?.message && !profileResult.success && (
-                  <p className="text-sm text-destructive" role="alert">
-                    {profileResult.message}
-                  </p>
-                )}
+                <FormError>{profileResult?.success ? null : profileResult?.message}</FormError>
 
                 <Separator />
 
@@ -466,7 +481,7 @@ export default function RegistoPage() {
                     disabled={profilePending}
                   >
                     {profilePending && <Loader2 className="size-4 animate-spin" />}
-                    Submeter registo
+                    {profilePending ? "A submeter…" : "Submeter registo"}
                   </Button>
                   <Button
                     type="button"
@@ -485,7 +500,7 @@ export default function RegistoPage() {
         {step === "conta" && (
           <p className="mt-4 text-sm text-muted-foreground">
             Já tem conta?{" "}
-            <Link href="/entrar" className="text-primary hover:underline">
+            <Link href="/entrar" className="text-primary-text hover:underline">
               Entrar
             </Link>
           </p>

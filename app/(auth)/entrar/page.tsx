@@ -24,6 +24,8 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { FormError } from "@/components/form-error";
+import { PasswordInput } from "@/components/password-input";
 import { authClient } from "@/lib/auth-client";
 
 const loginSchema = z.object({
@@ -79,7 +81,7 @@ function EntrarForm() {
       </CardHeader>
       <CardContent>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+          <form onSubmit={form.handleSubmit(onSubmit)} noValidate className="space-y-4">
             <FormField
               control={form.control}
               name="email"
@@ -91,6 +93,7 @@ function EntrarForm() {
                       type="email"
                       placeholder="nome@exemplo.com"
                       autoComplete="email"
+                      autoFocus
                       {...field}
                     />
                   </FormControl>
@@ -105,8 +108,7 @@ function EntrarForm() {
                 <FormItem>
                   <FormLabel>Palavra-passe</FormLabel>
                   <FormControl>
-                    <Input
-                      type="password"
+                    <PasswordInput
                       placeholder="••••••••"
                       autoComplete="current-password"
                       {...field}
@@ -117,26 +119,22 @@ function EntrarForm() {
               )}
             />
 
-            {error && (
-              <p className="text-sm text-destructive" role="alert">
-                {error}
-              </p>
-            )}
+            <FormError>{error}</FormError>
 
             <Button type="submit" className="w-full" disabled={isPending}>
               {isPending && <Loader2 className="size-4 animate-spin" />}
-              Entrar
+              {isPending ? "A entrar…" : "Entrar"}
             </Button>
           </form>
         </Form>
 
         <div className="mt-4 flex flex-col gap-2 text-sm">
-          <Link href="/esqueci-senha" className="text-primary hover:underline">
+          <Link href="/esqueci-senha" className="text-primary-text hover:underline">
             Esqueceu a palavra-passe?
           </Link>
           <p className="text-muted-foreground">
             Ainda não tem conta?{" "}
-            <Link href="/registo" className="text-primary hover:underline">
+            <Link href="/registo" className="text-primary-text hover:underline">
               Criar conta de motorista
             </Link>
           </p>

@@ -23,6 +23,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { FormError } from "@/components/form-error";
 import { requestPasswordResetAction } from "../actions";
 
 const schema = z.object({
@@ -57,13 +58,16 @@ export default function EsqueciSenhaPage() {
       </CardHeader>
       <CardContent>
         {state?.success ? (
-          <div className="flex flex-col items-center gap-3 py-4 text-center">
-            <MailCheck className="size-8 text-green-600" />
-            <p className="text-sm text-muted-foreground">{state.message}</p>
+          <div className="flex flex-col items-center gap-3 rounded-lg border border-primary/40 bg-primary/10 px-4 py-6 text-center">
+            <MailCheck className="size-8 text-primary-text" aria-hidden />
+            <p className="text-sm font-medium">{state.message}</p>
+            <p className="text-xs text-muted-foreground">
+              Se não encontrar o email, verifique a caixa de spam.
+            </p>
           </div>
         ) : (
           <Form {...form}>
-            <form action={formAction} className="space-y-4">
+            <form action={formAction} noValidate className="space-y-4">
               <FormField
                 control={form.control}
                 name="email"
@@ -75,6 +79,7 @@ export default function EsqueciSenhaPage() {
                         type="email"
                         placeholder="nome@exemplo.com"
                         autoComplete="email"
+                        autoFocus
                         {...field}
                       />
                     </FormControl>
@@ -83,22 +88,20 @@ export default function EsqueciSenhaPage() {
                 )}
               />
 
-              {state?.message && !state.success && (
-                <p className="text-sm text-destructive" role="alert">
-                  {state.message}
-                </p>
-              )}
+              <FormError>
+                {state?.success ? null : state?.message}
+              </FormError>
 
               <Button type="submit" className="w-full" disabled={isPending}>
                 {isPending && <Loader2 className="size-4 animate-spin" />}
-                Enviar instruções
+                {isPending ? "A enviar…" : "Enviar instruções"}
               </Button>
             </form>
           </Form>
         )}
 
         <p className="mt-4 text-sm text-muted-foreground">
-          <Link href="/entrar" className="text-primary hover:underline">
+          <Link href="/entrar" className="text-primary-text hover:underline">
             Voltar a iniciar sessão
           </Link>
         </p>

@@ -107,15 +107,15 @@ function layout(title: string, body: string, ctaUrl?: string, ctaLabel?: string)
     <div style="font-family: sans-serif; line-height: 1.5; background-color: #f4f4f4; padding: 40px 0;">
       <div style="max-width: 500px; margin: 0 auto; background-color: #ffffff; border-radius: 8px; padding: 30px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); text-align: center;">
         <div style="margin-bottom: 20px;">
-          <div style="display: inline-block; width: 50px; height: 50px; background-color: #ea580c; border-radius: 12px; line-height: 50px;">
-            <span style="color: white; font-weight: bold; font-size: 20px;">F</span>
+          <div style="display: inline-block; width: 50px; height: 50px; background-color: #00ff55; border-radius: 12px; line-height: 50px;">
+            <span style="color: #040404; font-weight: bold; font-size: 20px;">F</span>
           </div>
         </div>
         <h2 style="margin-bottom: 20px; color: #333;">${title}</h2>
         ${body}
         ${
           ctaUrl && ctaLabel
-            ? `<a href="${ctaUrl}" style="display: inline-block; padding: 12px 24px; background-color: #ea580c; color: white; text-decoration: none; border-radius: 6px; font-weight: bold;">${ctaLabel}</a>`
+            ? `<a href="${ctaUrl}" style="display: inline-block; padding: 12px 24px; background-color: #00ff55; color: #040404; text-decoration: none; border-radius: 6px; font-weight: bold;">${ctaLabel}</a>`
             : ''
         }
         <p style="font-size: 0.85em; color: #999; margin-top: 30px;">FRETA — A tua carga. O motorista certo.</p>

@@ -12,19 +12,19 @@ export function SiteFooter() {
         </div>
         <div className="flex flex-wrap items-center gap-4 text-sm">
           <InstallPwa variant="link" />
-          <Link href="/encontrar" className="text-muted-foreground hover:text-foreground">
+          <Link href="/encontrar" className="text-muted-foreground hover:text-primary-text">
             Encontrar motorista
           </Link>
-          <Link href="/sobre" className="text-muted-foreground hover:text-foreground">
+          <Link href="/sobre" className="text-muted-foreground hover:text-primary-text">
             Sobre
           </Link>
-          <Link href="/contacto" className="text-muted-foreground hover:text-foreground">
+          <Link href="/contacto" className="text-muted-foreground hover:text-primary-text">
             Contacto
           </Link>
-          <Link href="/termos" className="text-muted-foreground hover:text-foreground">
+          <Link href="/termos" className="text-muted-foreground hover:text-primary-text">
             Termos de uso
           </Link>
-          <Link href="/privacidade" className="text-muted-foreground hover:text-foreground">
+          <Link href="/privacidade" className="text-muted-foreground hover:text-primary-text">
             Privacidade
           </Link>
         </div>

@@ -79,7 +79,7 @@ export default async function AdminHomePage() {
               <CardTitle className="text-sm font-medium text-muted-foreground">
                 {stat.titulo}
               </CardTitle>
-              <stat.icone className="size-4 text-primary" />
+              <stat.icone className="size-4 text-primary-text" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{stat.valor}</div>
@@ -92,7 +92,7 @@ export default async function AdminHomePage() {
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-base">
-              <MapPin className="size-4 text-primary" /> Procura por região
+              <MapPin className="size-4 text-primary-text" /> Procura por região
               (30 dias)
             </CardTitle>
           </CardHeader>

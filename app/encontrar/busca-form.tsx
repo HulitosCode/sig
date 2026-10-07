@@ -4,7 +4,7 @@ import { useState, useTransition } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Loader2, Search } from "lucide-react";
+import { Loader2, Search, SearchX, ClipboardCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -32,6 +32,7 @@ import {
 import { SERVICOS, PRACAS } from "@/lib/freta";
 import { searchMotoristasAction, type MotoristaResultado } from "./actions";
 import { DriverCard } from "@/components/driver-card";
+import { FormError } from "@/components/form-error";
 
 const searchFormSchema = z.object({
   tipoCarga: z.string().min(1, "Escolha o tipo de carga."),
@@ -53,6 +54,7 @@ type ResultState = {
 
 export function BuscaForm() {
   const [result, setResult] = useState<ResultState | null>(null);
+  const [lastSearch, setLastSearch] = useState<SearchValues | null>(null);
   const [isPending, startTransition] = useTransition();
 
   const form = useForm<SearchValues>({
@@ -75,10 +77,17 @@ export function BuscaForm() {
     fd.append("destino", values.destino);
     fd.append("veiculoSugerido", values.veiculoSugerido ?? "");
     fd.append("contacto", values.contacto ?? "");
+    setLastSearch(values);
 
     startTransition(async () => {
       const res = await searchMotoristasAction({}, fd);
       setResult(res);
+      // Traz os resultados para a vista do utilizador.
+      requestAnimationFrame(() =>
+        document
+          .getElementById("resultados")
+          ?.scrollIntoView({ behavior: "smooth", block: "start" })
+      );
     });
   }
 
@@ -95,7 +104,7 @@ export function BuscaForm() {
         </CardHeader>
         <CardContent>
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+            <form onSubmit={form.handleSubmit(onSubmit)} noValidate className="space-y-4">
               <div className="grid gap-4 sm:grid-cols-2">
                 <FormField
                   control={form.control}
@@ -108,7 +117,7 @@ export function BuscaForm() {
                         value={field.value || undefined}
                       >
                         <FormControl>
-                          <SelectTrigger className="w-full">
+                          <SelectTrigger className="w-full" autoFocus>
                             <SelectValue placeholder="Escolha o tipo" />
                           </SelectTrigger>
                         </FormControl>
@@ -197,7 +206,12 @@ export function BuscaForm() {
                     <FormItem>
                       <FormLabel>O seu telefone (opcional)</FormLabel>
                       <FormControl>
-                        <Input placeholder="84 123 4567" {...field} />
+                        <Input
+                          type="tel"
+                          inputMode="tel"
+                          placeholder="84 123 4567"
+                          {...field}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -206,9 +220,7 @@ export function BuscaForm() {
               </div>
 
               {result?.message && (
-                <p className="text-sm text-destructive" role="alert">
-                  {result.message}
-                </p>
+                <FormError>{result.message}</FormError>
               )}
 
               <Button type="submit" className="w-full" disabled={isPending}>
@@ -217,7 +229,7 @@ export function BuscaForm() {
                 ) : (
                   <Search className="size-4" />
                 )}
-                Encontrar motoristas
+                {isPending ? "A procurar…" : "Encontrar motoristas"}
               </Button>
             </form>
           </Form>
@@ -225,7 +237,29 @@ export function BuscaForm() {
       </Card>
 
       {result && (
-        <section aria-live="polite" className="space-y-4">
+        <section
+          id="resultados"
+          aria-live="polite"
+          className="space-y-4 scroll-mt-20"
+        >
+          {/* Resumo do pedido registado (os motoristas recebem-no no painel). */}
+          {result.pedidoId && lastSearch && (
+            <Card className="border-primary/40 bg-primary/5">
+              <CardContent className="flex flex-wrap items-center gap-x-4 gap-y-1 p-4 text-sm">
+                <span className="flex items-center gap-1.5 font-semibold text-primary-text">
+                  <ClipboardCheck className="size-4" aria-hidden />
+                  Pedido registado
+                </span>
+                <span className="text-muted-foreground">
+                  {SERVICOS.find((s) => s.value === lastSearch.tipoCarga)
+                    ?.label ?? lastSearch.tipoCarga}{" "}
+                  · {lastSearch.origem} → {lastSearch.destino} · Praça{" "}
+                  {lastSearch.praca}
+                </span>
+              </CardContent>
+            </Card>
+          )}
+
           <h2 className="text-lg font-semibold">
             {motoristas.length > 0
               ? `${motoristas.length} motorista${motoristas.length > 1 ? "s" : ""} encontrado${motoristas.length > 1 ? "s" : ""}`
@@ -233,11 +267,14 @@ export function BuscaForm() {
           </h2>
 
           {motoristas.length === 0 && !result.message && (
-            <p className="text-sm text-muted-foreground">
-              Não encontrámos motoristas activos para este serviço nesta praça.
-              Tente outra praça ou fique atento — novos motoristas são
-              verificados diariamente.
-            </p>
+            <div className="flex items-start gap-3 rounded-lg border border-dashed p-4">
+              <SearchX className="mt-0.5 size-5 shrink-0 text-muted-foreground" aria-hidden />
+              <p className="text-sm text-muted-foreground">
+                Não encontrámos motoristas activos para este serviço nesta
+                praça. Tente outra praça ou fique atento — novos motoristas são
+                verificados diariamente.
+              </p>
+            </div>
           )}
 
           <div className="grid gap-4 sm:grid-cols-2">
