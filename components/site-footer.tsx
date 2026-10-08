@@ -19,7 +19,7 @@ const colunas: { titulo: string; links: { href: string; label: string }[] }[] = 
     titulo: "Conta",
     links: [
       { href: "/entrar", label: "Entrar" },
-      { href: "/registo", label: "Criar conta de motorista" },
+      { href: "/registo", label: "Criar conta grátis" },
       { href: "/motorista", label: "Painel do motorista" },
     ],
   },

@@ -31,13 +31,21 @@ export const metadata: Metadata = {
 export default async function AdminMotoristasPage({
   searchParams,
 }: {
-  searchParams: Promise<{ status?: string }>;
+  searchParams: Promise<{ status?: string; docs?: string }>;
 }) {
-  const { status } = await searchParams;
+  const { status, docs } = await searchParams;
   await connection(); // dados em tempo real
 
+  // docs=1 → apenas quem enviou documentos e aguarda validação.
+  const aguardamVerificacao = docs === "1";
+
   const motoristas = await prisma.motorista.findMany({
-    where: status ? { status } : undefined,
+    where: {
+      ...(status ? { status } : {}),
+      ...(aguardamVerificacao
+        ? { status: "pendente", documentosEnviadosEm: { not: null } }
+        : {}),
+    },
     orderBy: { createdAt: "desc" },
     include: {
       user: { select: { name: true, email: true } },
@@ -58,12 +66,23 @@ export default async function AdminMotoristasPage({
       whatsapp: m.whatsapp,
       praca: m.praca,
       tipoViatura: m.tipoViatura,
+      modelo: m.modelo,
+      ano: m.ano,
       matricula: m.matricula,
       cargaMax: m.cargaMax,
       servicos: m.servicos,
       precoKm: m.precoKm,
       observacoes: m.observacoes,
       createdAt: m.createdAt.toISOString(),
+      documentosEnviadosEm: m.documentosEnviadosEm?.toISOString() ?? null,
+      verificadoEm: m.verificadoEm?.toISOString() ?? null,
+      rejeicaoMotivo: m.rejeicaoMotivo,
+      biFrenteUrl: m.biFrenteUrl,
+      biVersoUrl: m.biVersoUrl,
+      fotoFrenteUrl: m.fotoFrenteUrl,
+      fotoEsquerdaUrl: m.fotoEsquerdaUrl,
+      fotoDireitaUrl: m.fotoDireitaUrl,
+      fotoTraseiraUrl: m.fotoTraseiraUrl,
       user: m.user,
       ultimoPagamento: pg
         ? {
@@ -79,7 +98,7 @@ export default async function AdminMotoristasPage({
   const filtros = [
     { valor: "", label: "Todos" },
     { valor: "pendente", label: "Pendentes" },
-    { valor: "ativo", label: "Activos" },
+    { valor: "ativo", label: "Verificados" },
     { valor: "bloqueado", label: "Bloqueados" },
   ];
 
@@ -126,7 +145,7 @@ export default async function AdminMotoristasPage({
                 : "/admin/motoristas"
             }
             className={`rounded-full border px-3 py-1.5 text-sm font-medium transition-colors ${
-              (status ?? "") === filtro.valor
+              !aguardamVerificacao && (status ?? "") === filtro.valor
                 ? "border-primary bg-primary text-primary-foreground"
                 : "text-muted-foreground hover:bg-muted hover:text-foreground"
             }`}
@@ -134,6 +153,16 @@ export default async function AdminMotoristasPage({
             {filtro.label}
           </Link>
         ))}
+        <Link
+          href="/admin/motoristas?docs=1"
+          className={`rounded-full border px-3 py-1.5 text-sm font-medium transition-colors ${
+            aguardamVerificacao
+              ? "border-primary bg-primary text-primary-foreground"
+              : "text-muted-foreground hover:bg-muted hover:text-foreground"
+          }`}
+        >
+          Aguardam verificação
+        </Link>
       </div>
 
       <Card>
@@ -156,6 +185,9 @@ export default async function AdminMotoristasPage({
                     Mensalidade
                   </TableHead>
                   <TableHead>Estado</TableHead>
+                  <TableHead className="hidden lg:table-cell">
+                    Verificação
+                  </TableHead>
                   <TableHead className="text-right">Acções</TableHead>
                 </TableRow>
               </TableHeader>
@@ -163,7 +195,7 @@ export default async function AdminMotoristasPage({
                 {linhas.length === 0 && (
                   <TableRow>
                     <TableCell
-                      colSpan={7}
+                      colSpan={8}
                       className="py-10 text-center text-muted-foreground"
                     >
                       Sem motoristas para este filtro.
@@ -178,6 +210,31 @@ export default async function AdminMotoristasPage({
                     new Date(pg.validoAte) > new Date();
                   const st =
                     STATUS_MOTORISTA[m.status] ?? STATUS_MOTORISTA.pendente;
+
+                  const verificacao =
+                    m.status === "ativo"
+                      ? {
+                          label: "Verificado",
+                          classe:
+                            "bg-green-100 text-green-800 dark:bg-primary/15 dark:text-primary",
+                        }
+                      : m.rejeicaoMotivo
+                        ? {
+                            label: "Rejeitado",
+                            classe:
+                              "bg-red-100 text-red-800 dark:bg-red-500/15 dark:text-red-400",
+                          }
+                        : m.documentosEnviadosEm
+                          ? {
+                              label: "Em análise",
+                              classe:
+                                "bg-amber-100 text-amber-800 dark:bg-amber-500/15 dark:text-amber-400",
+                            }
+                          : {
+                              label: "Por enviar",
+                              classe:
+                                "border text-muted-foreground",
+                            };
 
                   return (
                     <TableRow key={m.id}>
@@ -232,6 +289,14 @@ export default async function AdminMotoristasPage({
                       </TableCell>
                       <TableCell>
                         <Badge className={st.classe}>{st.label}</Badge>
+                      </TableCell>
+                      <TableCell className="hidden lg:table-cell">
+                        <Badge
+                          variant="outline"
+                          className={verificacao.classe}
+                        >
+                          {verificacao.label}
+                        </Badge>
                       </TableCell>
                       <TableCell className="text-right">
                         <MotoristaAccoes motorista={m} />

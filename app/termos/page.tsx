@@ -182,9 +182,8 @@ export default function TermosPage() {
 
         <Secao id="pagamentos" titulo="5. Pagamentos">
           <p>
-            O registo de motorista tem o custo de{" "}
-            <strong className="text-foreground">120 MT</strong> (cadastro) e o
-            plano mensal custa{" "}
+            O registo de motorista é <strong className="text-foreground">grátis</strong>{" "}
+            — não há custo de cadastro — e o plano mensal custa{" "}
             <strong className="text-foreground">480 MT</strong>, pelos valores
             comunicados no momento do registo e confirmados com a administração.
           </p>
@@ -195,8 +194,9 @@ export default function TermosPage() {
             </li>
             <li>
               A administração confirma o pagamento manualmente e regista o
-              período correspondente; o perfil só fica activo após a
-              confirmação.
+              período correspondente; o perfil só fica visível aos clientes após
+              a validação dos documentos de verificação (e, quando aplicável, a
+              confirmação do pagamento).
             </li>
             <li>
               Sem confirmação no prazo indicado, o perfil mantém-se ou volta a
@@ -326,9 +326,10 @@ export default function TermosPage() {
           titulo="11. Limitação de responsabilidade"
         >
           <p>
-            O FRETA intermedia contactos. A verificação presencial confirma a
-            identidade e os dados do veículo, mas não constitui garantia da
-            qualidade, pontualidade ou segurança do serviço contratado.
+            O FRETA intermedia contactos. A verificação documental (BI e fotos
+            do veículo), validada pela administração, confirma a identidade e os
+            dados do veículo, mas não constitui garantia da qualidade,
+            pontualidade ou segurança do serviço contratado.
           </p>
           <ul className="list-disc space-y-1.5 pl-5">
             <li>

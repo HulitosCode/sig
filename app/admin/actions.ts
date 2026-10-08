@@ -4,9 +4,14 @@ import { randomUUID } from 'node:crypto'
 import { hashPassword } from 'better-auth/crypto'
 import { z } from 'zod'
 import { revalidatePath } from 'next/cache'
+import { after } from 'next/server'
 import { prisma } from '@/lib/db'
 import { getSession } from '@/lib/session'
 import { VALOR_MENSALIDADE_MT, PRACAS, SERVICOS } from '@/lib/freta'
+import {
+  sendMotoristaVerificadoEmail,
+  sendMotoristaRejeitadoEmail,
+} from '@/lib/email'
 
 type ActionState = {
   success?: boolean
@@ -22,19 +27,78 @@ async function requireAdminSession() {
   return session.user
 }
 
-// Confirma o perfil do motorista (verificação presencial na praça).
+// Aprova a verificação do perfil (grava selo, data e admin responsável).
 export async function aprovarMotoristaAction(motoristaId: number): Promise<ActionState> {
   const admin = await requireAdminSession()
   if (!admin) return { success: false, message: 'Sem permissões de admin.' }
 
   try {
-    await prisma.motorista.update({
+    const motorista = await prisma.motorista.update({
       where: { id: motoristaId },
-      data: { status: 'ativo' },
+      data: {
+        status: 'ativo',
+        verificadoEm: new Date(),
+        verificadoPor: admin.id,
+        rejeicaoMotivo: null,
+      },
+      include: { user: { select: { name: true, email: true } } },
     })
+
+    // Notifica o motorista (fire-and-forget — não atrasa a resposta).
+    after(() =>
+      sendMotoristaVerificadoEmail(motorista.user.email, motorista.user.name).catch(
+        (err) => console.error('[Email] Verificado:', err)
+      )
+    )
+
     revalidatePath('/admin')
     revalidatePath('/admin/motoristas')
-    return { success: true, message: 'Perfil aprovado. Já aparece nas pesquisas.' }
+    revalidatePath('/motorista')
+    revalidatePath('/motorista/perfil')
+    return { success: true, message: 'Perfil verificado. Já aparece nas pesquisas.' }
+  } catch {
+    return { success: false, message: 'Motorista não encontrado.' }
+  }
+}
+
+// Rejeita os documentos enviados, com motivo (o motorista é notificado).
+export async function rejeitarVerificacaoAction(
+  motoristaId: number,
+  motivo: string
+): Promise<ActionState> {
+  const admin = await requireAdminSession()
+  if (!admin) return { success: false, message: 'Sem permissões de admin.' }
+
+  const texto = motivo.trim()
+  if (texto.length < 5) {
+    return { success: false, message: 'Indique o motivo da rejeição (mín. 5 caracteres).' }
+  }
+
+  try {
+    const motorista = await prisma.motorista.update({
+      where: { id: motoristaId },
+      data: {
+        status: 'pendente',
+        rejeicaoMotivo: texto,
+        verificadoEm: null,
+        verificadoPor: null,
+      },
+      include: { user: { select: { name: true, email: true } } },
+    })
+
+    after(() =>
+      sendMotoristaRejeitadoEmail(
+        motorista.user.email,
+        motorista.user.name,
+        texto
+      ).catch((err) => console.error('[Email] Rejeição:', err))
+    )
+
+    revalidatePath('/admin')
+    revalidatePath('/admin/motoristas')
+    revalidatePath('/motorista')
+    revalidatePath('/motorista/perfil')
+    return { success: true, message: 'Documentos rejeitados. O motorista foi notificado.' }
   } catch {
     return { success: false, message: 'Motorista não encontrado.' }
   }
@@ -48,7 +112,7 @@ export async function rejeitarMotoristaAction(motoristaId: number): Promise<Acti
   try {
     await prisma.motorista.update({
       where: { id: motoristaId },
-      data: { status: 'pendente' },
+      data: { status: 'pendente', verificadoEm: null, verificadoPor: null },
     })
     revalidatePath('/admin')
     revalidatePath('/admin/motoristas')

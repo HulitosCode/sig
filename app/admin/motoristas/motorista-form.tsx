@@ -15,7 +15,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { FormError } from "@/components/form-error";
 import {
   criarMotoristaAction,
   atualizarMotoristaAction,
@@ -83,7 +82,6 @@ export function MotoristaForm({
   onCancelar,
 }: Props) {
   const uid = useId();
-  const [erro, setErro] = useState<string | null>(null);
   const [errosCampo, setErrosCampo] = useState<Record<string, string[]>>({});
   const [isPending, startTransition] = useTransition();
 
@@ -105,21 +103,24 @@ export function MotoristaForm({
       formData.append("motoristaId", String(motoristaId));
     }
 
-    setErro(null);
     setErrosCampo({});
 
     startTransition(async () => {
-      const resultado =
-        mode === "criar"
-          ? await criarMotoristaAction(formData)
-          : await atualizarMotoristaAction(formData);
+      try {
+        const resultado =
+          mode === "criar"
+            ? await criarMotoristaAction(formData)
+            : await atualizarMotoristaAction(formData);
 
-      if (resultado.success) {
-        toast.success(resultado.message ?? "Guardado.");
-        onConcluido?.();
-      } else {
-        setErro(resultado.message ?? "Verifique os dados do formulário.");
-        setErrosCampo(resultado.errors ?? {});
+        if (resultado.success) {
+          toast.success(resultado.message ?? "Guardado.");
+          onConcluido?.();
+        } else {
+          toast.error(resultado.message ?? "Verifique os dados do formulário.");
+          setErrosCampo(resultado.errors ?? {});
+        }
+      } catch {
+        toast.error("Erro de ligação. Tente novamente.");
       }
     });
   }
@@ -317,8 +318,6 @@ export function MotoristaForm({
           <CampoErro erros={errosCampo} campo="observacoes" />
         </div>
       </div>
-
-      {erro && <FormError>{erro}</FormError>}
 
       <div className="flex justify-end gap-2">
         {onCancelar && (

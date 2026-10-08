@@ -1,12 +1,13 @@
 "use client";
 
-import { Suspense, useState, useTransition } from "react";
+import { Suspense, useTransition } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Loader2 } from "lucide-react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -24,7 +25,6 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { FormError } from "@/components/form-error";
 import { PasswordInput } from "@/components/password-input";
 import { authClient } from "@/lib/auth-client";
 
@@ -46,7 +46,6 @@ export default function EntrarPage() {
 function EntrarForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
   const form = useForm<LoginValues>({
@@ -55,19 +54,40 @@ function EntrarForm() {
   });
 
   function onSubmit(values: LoginValues) {
-    setError(null);
     startTransition(async () => {
-      const { error } = await authClient.signIn.email({
-        email: values.email,
-        password: values.password,
-      });
-      if (error) {
-        setError(error.message || "Email ou palavra-passe incorretos.");
-        return;
+      try {
+        const { error } = await authClient.signIn.email({
+          email: values.email,
+          password: values.password,
+        });
+        if (error) {
+          toast.error(error.message || "Email ou palavra-passe incorretos.");
+          return;
+        }
+
+        // Encaminha conforme o papel (ou ?next=…).
+        const next = searchParams.get("next");
+        const { data } = await authClient.getSession();
+        const role =
+          (data?.user as { role?: string } | undefined)?.role ?? "motorista";
+        const destino =
+          next && next.startsWith("/")
+            ? next
+            : role === "admin"
+              ? "/admin"
+              : role === "cliente"
+                ? "/"
+                : "/motorista";
+
+        toast.success("Bem-vindo(a) de volta!");
+        router.push(destino);
+        router.refresh();
+      } catch (err) {
+        console.error("[Entrar] Falha no login:", err);
+        toast.error(
+          "Erro de ligação ao servidor. Verifique a internet e tente novamente."
+        );
       }
-      const next = searchParams.get("next");
-      router.push(next && next.startsWith("/") ? next : "/motorista");
-      router.refresh();
     });
   }
 
@@ -76,7 +96,7 @@ function EntrarForm() {
       <CardHeader>
         <CardTitle>Entrar</CardTitle>
         <CardDescription>
-          Aceda à sua conta de motorista ou administrador.
+          Aceda à sua conta FRETA (motorista, cliente ou administrador).
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -119,8 +139,6 @@ function EntrarForm() {
               )}
             />
 
-            <FormError>{error}</FormError>
-
             <Button type="submit" className="w-full" disabled={isPending}>
               {isPending && <Loader2 className="size-4 animate-spin" />}
               {isPending ? "A entrar…" : "Entrar"}
@@ -135,7 +153,7 @@ function EntrarForm() {
           <p className="text-muted-foreground">
             Ainda não tem conta?{" "}
             <Link href="/registo" className="text-primary-text hover:underline">
-              Criar conta de motorista
+              Criar conta grátis
             </Link>
           </p>
         </div>

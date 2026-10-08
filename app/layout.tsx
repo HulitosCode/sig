@@ -1,6 +1,8 @@
 import type { Metadata, Viewport } from "next";
 import { Poppins, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import { NextSSRPlugin } from "@uploadthing/react/next-ssr-plugin";
+import { uploadthingSSRConfig } from "@/lib/uploadthing-ssr";
 import { ThemeProvider } from "@/components/theme-provider";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { Toaster } from "@/components/ui/sonner";
@@ -77,6 +79,8 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         >
           <TooltipProvider>
             <PwaRegister />
+            {/* Pré-carrega a config das rotas do UploadThing (SSR). */}
+            <NextSSRPlugin routerConfig={uploadthingSSRConfig} />
             <SiteHeader />
             <main className="flex-1">{children}</main>
             <SiteFooter />

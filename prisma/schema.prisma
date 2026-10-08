@@ -21,7 +21,7 @@ model User {
   updatedAt     DateTime @default(now())
 
   // FRETA: papel da conta
-  role String @default("motorista") // "admin" | "motorista"
+  role String @default("motorista") // "admin" | "motorista" | "cliente"
 
   motorista Motorista?
   sessions  Session[]
@@ -83,15 +83,31 @@ model Motorista {
   telefone       String // usado no botão "Ligar"
   whatsapp       String? // usado no botão "WhatsApp" (fallback: telefone)
   praca          String // praça/zona: Maputo, Matola, Zimpeto...
-  tipoViatura    String // ex.: Toyota Dyna, camião, carrinha
+  tipoViatura    String // tipo de carro: carrinha, camião, pick-up...
+  modelo         String? // ex.: Toyota Dyna
+  ano            Int? // ano de fabrico
   matricula      String
   cargaMax       String // ex.: "2 toneladas"
   servicos       String[] // mudanca | mercadoria | moveis | construcao | pesada | outro
   precoKm        String?
   observacoes    String?
 
-  status         String @default("pendente") // pendente | ativo | bloqueado
+  // Documentos e fotos (verificação de identidade/veículo)
+  biFrenteUrl     String? // BI — frente
+  biVersoUrl      String? // BI — verso
+  fotoFrenteUrl   String? // foto do carro — frente
+  fotoEsquerdaUrl String? // foto do carro — lado esquerdo
+  fotoDireitaUrl  String? // foto do carro — lado direito
+  fotoTraseiraUrl String? // foto do carro — traseira
+
+  status          String @default("pendente") // pendente | ativo | bloqueado
   disponibilidade String @default("disponivel") // disponivel | ocupado | indisponivel
+
+  // Ciclo de verificação (submissão → validação do admin)
+  documentosEnviadosEm DateTime?
+  verificadoEm         DateTime?
+  verificadoPor        String? // userId do admin que aprovou
+  rejeicaoMotivo       String? // motivo da última rejeição
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -106,7 +122,7 @@ model Pagamento {
   motoristaId  Int
   motorista    Motorista @relation(fields: [motoristaId], references: [id], onDelete: Cascade)
 
-  valor        Int       @default(120) // MT/mês
+  valor        Int       @default(480) // MT/mês (plano mensal)
   status       String    @default("pendente") // pendente | confirmado
   pagoEm       DateTime?
   confirmadoPor String? // userId do admin

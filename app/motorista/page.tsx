@@ -11,6 +11,8 @@ import {
   MessageCircle,
   CheckCircle2,
   AlertTriangle,
+  BadgeCheck,
+  Send,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -20,6 +22,8 @@ import { requireUser } from "@/lib/session";
 import { prisma } from "@/lib/db";
 import { SERVICO_LABELS, SUPORTE, VALOR_MENSALIDADE_MT } from "@/lib/freta";
 import { DisponibilidadeControl } from "./disponibilidade-control";
+import { VerificacaoBotao } from "./verificacao-modal";
+import { paraVerificacaoValores } from "./verificacao-valores";
 
 // Rota autenticada: sempre dinâmica (sessão + dados em tempo real).
 export const instant = false;
@@ -35,7 +39,7 @@ const STATUS_LABEL: Record<string, { label: string; classe: string }> = {
       "bg-amber-100 text-amber-800 dark:bg-amber-500/15 dark:text-amber-400",
   },
   ativo: {
-    label: "Activo",
+    label: "Verificado",
     classe: "bg-green-100 text-green-800 dark:bg-primary/15 dark:text-primary",
   },
   bloqueado: {
@@ -61,19 +65,26 @@ export default async function MotoristaPage() {
   });
 
   if (!motorista) {
+    const valoresVazios = paraVerificacaoValores(user, null);
     return (
-      <div className="mx-auto w-full max-w-3xl py-16 text-center">
+      <div className="mx-auto w-full max-w-3xl space-y-4 py-16 text-center">
         <h1 className="text-2xl font-semibold">Complete o seu perfil</h1>
-        <p className="mt-2 text-muted-foreground">
-          Ainda não tem perfil de motorista. Crie-o para começar a receber
-          pedidos na sua praça.
+        <p className="mx-auto max-w-lg text-muted-foreground">
+          Preencha os seus dados, envie o BI e as fotos do veículo para começar
+          a receber pedidos na sua praça. O cadastro é grátis.
         </p>
-        <Button render={<Link href="/registo" />} className="mt-6">
-          Criar perfil de motorista
-        </Button>
+        <div className="flex justify-center">
+          <VerificacaoBotao valores={valoresVazios} verificado={false}>
+            <Send className="size-4" /> Completar verificação
+          </VerificacaoBotao>
+        </div>
       </div>
     );
   }
+
+  const valores = paraVerificacaoValores(user, motorista);
+  const enviado = Boolean(motorista.documentosEnviadosEm);
+  const rejeitado = motorista.status !== "ativo" && Boolean(motorista.rejeicaoMotivo);
 
   // Pedidos da praça do motorista (os mais recentes) — inclui os que ele
   // contactou directamente.
@@ -110,20 +121,75 @@ export default async function MotoristaPage() {
         <Badge className={status.classe}>{status.label}</Badge>
       </div>
 
-      {/* Estado */}
-      {motorista.status !== "ativo" && (
-        <div className="flex items-start gap-3 rounded-lg border border-amber-300 bg-amber-50 p-4 text-sm text-amber-900 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-200">
-          <AlertTriangle className="mt-0.5 size-4 shrink-0" />
-          <div>
+      {/* Estado de verificação */}
+      {motorista.status === "ativo" && (
+        <div className="flex items-center gap-3 rounded-lg border border-primary/40 bg-primary/10 p-4 text-sm">
+          <BadgeCheck className="size-4 shrink-0 text-primary-text" />
+          <p>
+            <strong>Perfil verificado</strong> — visível para os clientes com o
+            selo da FRETA.
+          </p>
+        </div>
+      )}
+
+      {motorista.status === "bloqueado" && (
+        <div className="flex flex-wrap items-center gap-3 rounded-lg border border-red-300 bg-red-50 p-4 text-sm text-red-900 dark:border-red-500/30 dark:bg-red-500/10 dark:text-red-200">
+          <AlertTriangle className="size-4 shrink-0" />
+          <div className="min-w-0 flex-1">
+            <p className="font-medium">O seu perfil está bloqueado.</p>
+            <p>
+              Contacte a administração para o desbloquear
+              {motorista.rejeicaoMotivo
+                ? ` — motivo: ${motorista.rejeicaoMotivo}`
+                : "."}
+            </p>
+          </div>
+        </div>
+      )}
+
+      {rejeitado && (
+        <div className="flex flex-wrap items-center gap-3 rounded-lg border border-red-300 bg-red-50 p-4 text-sm text-red-900 dark:border-red-500/30 dark:bg-red-500/10 dark:text-red-200">
+          <AlertTriangle className="size-4 shrink-0" />
+          <div className="min-w-0 flex-1">
+            <p className="font-medium">
+              Os seus documentos não foram aprovados.
+            </p>
+            <p>Motivo: {motorista.rejeicaoMotivo}</p>
+          </div>
+          <VerificacaoBotao
+            valores={valores}
+            verificado={false}
+            variant="outline"
+            className="shrink-0"
+          >
+            Corrigir e reenviar
+          </VerificacaoBotao>
+        </div>
+      )}
+
+      {motorista.status === "pendente" && !rejeitado && (
+        <div className="flex flex-wrap items-center gap-3 rounded-lg border border-amber-300 bg-amber-50 p-4 text-sm text-amber-900 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-200">
+          <AlertTriangle className="size-4 shrink-0" />
+          <div className="min-w-0 flex-1">
             <p className="font-medium">
               O seu perfil ainda não está visível para os clientes.
             </p>
             <p className="mt-1">
-              {motorista.status === "pendente"
-                ? `A equipa FRETA vai verificar os seus dados presencialmente na praça e confirmar o pagamento da mensalidade (${VALOR_MENSALIDADE_MT} MT/mês).`
-                : "Contacte a administração para desbloquear o seu perfil."}
+              {enviado
+                ? "Documentos enviados — a administração vai validar o seu BI e as fotos do veículo."
+                : "Envie o BI e as fotos do veículo para a administração validar e activar o seu perfil."}
+              {` A mensalidade é de ${VALOR_MENSALIDADE_MT} MT/mês (confirmada pela administração).`}
             </p>
           </div>
+          <VerificacaoBotao
+            valores={valores}
+            verificado={false}
+            variant="outline"
+            className="shrink-0"
+          >
+            <Send className="size-4" />
+            {enviado ? "Ver documentos" : "Enviar documentos"}
+          </VerificacaoBotao>
         </div>
       )}
 

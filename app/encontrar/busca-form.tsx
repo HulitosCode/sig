@@ -32,7 +32,7 @@ import {
 import { SERVICOS, PRACAS } from "@/lib/freta";
 import { searchMotoristasAction, type MotoristaResultado } from "./actions";
 import { DriverCard } from "@/components/driver-card";
-import { FormError } from "@/components/form-error";
+import { toast } from "sonner";
 
 const searchFormSchema = z.object({
   tipoCarga: z.string().min(1, "Escolha o tipo de carga."),
@@ -82,6 +82,7 @@ export function BuscaForm() {
     startTransition(async () => {
       const res = await searchMotoristasAction({}, fd);
       setResult(res);
+      if (res.message) toast.error(res.message);
       // Traz os resultados para a vista do utilizador.
       requestAnimationFrame(() =>
         document
@@ -218,10 +219,6 @@ export function BuscaForm() {
                   )}
                 />
               </div>
-
-              {result?.message && (
-                <FormError>{result.message}</FormError>
-              )}
 
               <Button type="submit" className="w-full" disabled={isPending}>
                 {isPending ? (

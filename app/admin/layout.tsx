@@ -27,9 +27,13 @@ export default async function AdminLayout({
 
   const agora = new Date();
   const trintaDias = new Date(agora.getTime() - 30 * 24 * 60 * 60 * 1000);
-  const [pendentes, pedidosRecentes] = await Promise.all([
+  const [pendentes, pedidosRecentes, verificacoes] = await Promise.all([
     prisma.motorista.count({ where: { status: "pendente" } }),
     prisma.pedido.count({ where: { criadoEm: { gte: trintaDias } } }),
+    // Documentos enviados à espera de validação do admin.
+    prisma.motorista.count({
+      where: { status: "pendente", documentosEnviadosEm: { not: null } },
+    }),
   ]);
 
   return (
@@ -37,6 +41,7 @@ export default async function AdminLayout({
       <AdminSidebar
         pendentes={pendentes}
         pedidosRecentes={pedidosRecentes}
+        verificacoes={verificacoes}
       />
       <div className="relative flex w-full min-w-0 flex-1 flex-col bg-background">
         <DashboardToolbar titulo="Administração">

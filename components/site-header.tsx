@@ -1,10 +1,11 @@
 import Link from "next/link";
 import { Suspense } from "react";
 import { Truck, UserRound } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { getSession } from "@/lib/session";
 import { UserMenu } from "@/components/user-menu";
+import { CriarContaModal } from "@/components/conta/criar-conta-modal";
+import { EntrarModal } from "@/components/conta/entrar-modal";
 import { MobileNav } from "@/components/mobile-nav";
 import { NavLinks } from "@/components/nav-links";
 import { ThemeMenu } from "@/components/theme-menu";
@@ -73,13 +74,6 @@ async function UserNav() {
 
   return (
     <nav className="flex items-center gap-1 sm:gap-2" aria-label="Conta">
-      <Button
-        variant="ghost"
-        render={<Link href="/encontrar" />}
-        className="hidden lg:inline-flex"
-      >
-        Encontrar motorista
-      </Button>
       {user ? (
         <UserMenu
           user={{
@@ -90,14 +84,20 @@ async function UserNav() {
         />
       ) : (
         <>
-          <Button variant="ghost" render={<Link href="/entrar" />}>
-            Entrar
-          </Button>
-          <Button render={<Link href="/registo" />}>
-            <UserRound className="size-4" />
-            <span className="hidden sm:inline">Sou motorista</span>
-            <span className="sm:hidden">Registar</span>
-          </Button>
+          <EntrarModal
+            trigger="Entrar"
+            triggerVariant="ghost"
+            triggerClassName="hidden sm:inline-flex"
+          />
+          <CriarContaModal
+            trigger={
+              <>
+                <UserRound className="size-4" />
+                <span>Criar conta</span>
+              </>
+            }
+            triggerClassName="bg-primary text-primary-foreground hover:bg-primary/90"
+          />
         </>
       )}
     </nav>

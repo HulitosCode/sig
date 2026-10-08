@@ -37,7 +37,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { FormError } from "@/components/form-error";
 import {
   aprovarMotoristaAction,
   bloquearMotoristaAction,
@@ -51,6 +50,7 @@ import {
   formatMt,
 } from "@/lib/freta";
 import { MotoristaForm, type MotoristaValores } from "./motorista-form";
+import { DocumentosDialog } from "./documentos-dialog";
 
 /** Linha serializada da tabela (datas em ISO — passáveis ao cliente). */
 export type MotoristaLinha = {
@@ -60,12 +60,23 @@ export type MotoristaLinha = {
   whatsapp: string | null;
   praca: string;
   tipoViatura: string;
+  modelo: string | null;
+  ano: number | null;
   matricula: string;
   cargaMax: string;
   servicos: string[];
   precoKm: string | null;
   observacoes: string | null;
   createdAt: string;
+  documentosEnviadosEm: string | null;
+  verificadoEm: string | null;
+  rejeicaoMotivo: string | null;
+  biFrenteUrl: string | null;
+  biVersoUrl: string | null;
+  fotoFrenteUrl: string | null;
+  fotoEsquerdaUrl: string | null;
+  fotoDireitaUrl: string | null;
+  fotoTraseiraUrl: string | null;
   user: { name: string; email: string };
   ultimoPagamento: {
     valor: number;
@@ -86,7 +97,7 @@ export const STATUS_MOTORISTA: Record<
       "bg-amber-100 text-amber-800 dark:bg-amber-500/15 dark:text-amber-400",
   },
   ativo: {
-    label: "Activo",
+    label: "Verificado",
     classe:
       "bg-green-100 text-green-800 dark:bg-primary/15 dark:text-primary",
   },
@@ -108,7 +119,13 @@ function formatarData(iso: string | null) {
 type Props = { motorista: MotoristaLinha };
 type OpenChange = (open: boolean) => void;
 
-type Dialogo = null | "ver" | "editar" | "remover" | "pagamento";
+type Dialogo =
+  | null
+  | "ver"
+  | "editar"
+  | "remover"
+  | "pagamento"
+  | "documentos";
 
 /** Acções por linha: menu ⋯ com visualizar, editar, pagamentos e estado. */
 export function MotoristaAccoes({ motorista }: Props) {
@@ -140,6 +157,10 @@ export function MotoristaAccoes({ motorista }: Props) {
           <DropdownMenuItem onClick={() => setDialogo("ver")}>
             <Eye className="size-4" />
             Visualizar
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={() => setDialogo("documentos")}>
+            <BadgeCheck className="size-4" />
+            Ver documentos
           </DropdownMenuItem>
           <DropdownMenuItem onClick={() => setDialogo("editar")}>
             <Pencil className="size-4" />
@@ -210,6 +231,11 @@ export function MotoristaAccoes({ motorista }: Props) {
         onOpenChange={fechar}
         motorista={motorista}
         onEditar={() => setDialogo("editar")}
+      />
+      <DocumentosDialog
+        motorista={motorista}
+        open={dialogo === "documentos"}
+        onOpenChange={fechar}
       />
       <EditarMotoristaDialog
         open={dialogo === "editar"}
@@ -423,21 +449,23 @@ function PagamentoDialog({
   open: boolean;
   onOpenChange: OpenChange;
 }) {
-  const [erro, setErro] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const formData = new FormData(event.currentTarget);
-    setErro(null);
 
     startTransition(async () => {
-      const resultado = await confirmarPagamentoAction({}, formData);
-      if (resultado.success) {
-        toast.success(resultado.message ?? "Pagamento registado.");
-        onOpenChange(false);
-      } else {
-        setErro(resultado.message ?? "Não foi possível registar o pagamento.");
+      try {
+        const resultado = await confirmarPagamentoAction({}, formData);
+        if (resultado.success) {
+          toast.success(resultado.message ?? "Pagamento registado.");
+          onOpenChange(false);
+        } else {
+          toast.error(resultado.message ?? "Não foi possível registar o pagamento.");
+        }
+      } catch {
+        toast.error("Erro de ligação. Tente novamente.");
       }
     });
   }
@@ -472,8 +500,6 @@ function PagamentoDialog({
               </SelectContent>
             </Select>
           </div>
-
-          {erro && <FormError>{erro}</FormError>}
 
           <DialogFooter>
             <Button

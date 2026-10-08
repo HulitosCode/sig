@@ -135,7 +135,7 @@ export default function ContactoPage() {
         <div className="mt-4 flex flex-wrap justify-center gap-2">
           <Button variant="outline" render={<Link href="/registo" />}>
             <UserRound className="size-4" />
-            Sou motorista
+            Criar conta grátis
           </Button>
           <Button render={<Link href="/encontrar" />}>Preciso de frete</Button>
         </div>

@@ -1,7 +1,15 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { Phone, MessageCircle, MapPin, Star, Loader2 } from "lucide-react";
+import {
+  BadgeCheck,
+  Loader2,
+  MapPin,
+  MessageCircle,
+  Phone,
+  Star,
+} from "lucide-react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
@@ -21,7 +29,6 @@ import {
   recordContactAction,
 } from "@/app/encontrar/actions";
 import { SERVICO_LABELS } from "@/lib/freta";
-import { FormError } from "@/components/form-error";
 
 type DriverCardProps = {
   motorista: MotoristaResultado;
@@ -36,10 +43,6 @@ export function DriverCard({ motorista, pedidoId }: DriverCardProps) {
   const [ratingOpen, setRatingOpen] = useState(false);
   const [nota, setNota] = useState(5);
   const [comentario, setComentario] = useState("");
-  const [ratingState, setRatingState] = useState<{
-    ok?: boolean;
-    message?: string;
-  } | null>(null);
   const [isRatingPending, startRatingTransition] = useTransition();
 
   const iniciais = motorista.nome
@@ -60,15 +63,23 @@ export function DriverCard({ motorista, pedidoId }: DriverCardProps) {
 
   function submeterAvaliacao() {
     startRatingTransition(async () => {
-      const res = await avaliarMotoristaAction(
-        motorista.id,
-        pedidoId,
-        nota,
-        comentario
-      );
-      setRatingState(res);
-      if (res.ok) {
-        setTimeout(() => setRatingOpen(false), 1200);
+      try {
+        const res = await avaliarMotoristaAction(
+          motorista.id,
+          pedidoId,
+          nota,
+          comentario
+        );
+        if (res.ok) {
+          toast.success(res.message ?? "Obrigado pela sua avaliação!");
+          setRatingOpen(false);
+          setComentario("");
+          setNota(5);
+        } else {
+          toast.error(res.message ?? "Não foi possível enviar a avaliação.");
+        }
+      } catch {
+        toast.error("Erro de ligação. Tente novamente.");
       }
     });
   }
@@ -92,7 +103,14 @@ export function DriverCard({ motorista, pedidoId }: DriverCardProps) {
 
           <div className="min-w-0 flex-1">
             <div className="flex flex-wrap items-center justify-between gap-2">
-              <span className="font-semibold">{motorista.nome}</span>
+              <span className="flex items-center gap-2 font-semibold">
+                {motorista.nome}
+                {/* Selo de perfil verificado (visível para os clientes). */}
+                <span className="inline-flex items-center gap-1 rounded-full border border-primary/50 bg-primary/15 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-primary-text">
+                  <BadgeCheck className="size-3" />
+                  Verificado
+                </span>
+              </span>
               <Badge
                 variant="outline"
                 className={
@@ -198,60 +216,50 @@ export function DriverCard({ motorista, pedidoId }: DriverCardProps) {
                     </DialogDescription>
                   </DialogHeader>
 
-                  {ratingState?.ok ? (
-                    <p className="text-sm font-medium text-primary-text">
-                      Obrigado pela sua avaliação!
-                    </p>
-                  ) : (
-                    <div className="space-y-4">
-                      <div className="flex gap-1">
-                        {[1, 2, 3, 4, 5].map((n) => (
-                          <button
-                            key={n}
-                            type="button"
-                            aria-label={`Nota ${n}`}
-                            onClick={() => setNota(n)}
-                            className="rounded p-1"
-                          >
-                            <Star
-                              className={`size-7 ${
-                                n <= nota
-                                  ? "fill-yellow-400 text-yellow-400"
-                                  : "text-muted-foreground"
-                              }`}
-                            />
-                          </button>
-                        ))}
-                      </div>
-
-                      <div className="space-y-2">
-                        <Label htmlFor="comentario">Comentário (opcional)</Label>
-                        <Textarea
-                          id="comentario"
-                          rows={3}
-                          maxLength={500}
-                          value={comentario}
-                          onChange={(e) => setComentario(e.target.value)}
-                          placeholder="Pontos positivos, estado da viatura, pontualidade..."
-                        />
-                      </div>
-
-                      {ratingState?.message && (
-                        <FormError>{ratingState.message}</FormError>
-                      )}
-
-                      <Button
-                        onClick={submeterAvaliacao}
-                        disabled={isRatingPending}
-                        className="w-full"
-                      >
-                        {isRatingPending && (
-                          <Loader2 className="size-4 animate-spin" />
-                        )}
-                        {isRatingPending ? "A enviar…" : "Enviar avaliação"}
-                      </Button>
+                  <div className="space-y-4">
+                    <div className="flex gap-1">
+                      {[1, 2, 3, 4, 5].map((n) => (
+                        <button
+                          key={n}
+                          type="button"
+                          aria-label={`Nota ${n}`}
+                          onClick={() => setNota(n)}
+                          className="rounded p-1"
+                        >
+                          <Star
+                            className={`size-7 ${
+                              n <= nota
+                                ? "fill-yellow-400 text-yellow-400"
+                                : "text-muted-foreground"
+                            }`}
+                          />
+                        </button>
+                      ))}
                     </div>
-                  )}
+
+                    <div className="space-y-2">
+                      <Label htmlFor="comentario">Comentário (opcional)</Label>
+                      <Textarea
+                        id="comentario"
+                        rows={3}
+                        maxLength={500}
+                        value={comentario}
+                        onChange={(e) => setComentario(e.target.value)}
+                        placeholder="Pontos positivos, estado da viatura, pontualidade..."
+                      />
+                    </div>
+
+                    <Button
+                      onClick={submeterAvaliacao}
+                      disabled={isRatingPending}
+                      className="w-full"
+                    >
+                      {isRatingPending && (
+                        <Loader2 className="size-4 animate-spin" />
+                      )}
+                      {isRatingPending ? "A enviar…" : "Enviar avaliação"}
+                    </Button>
+                  </div>
                 </DialogContent>
               </Dialog>
             </div>

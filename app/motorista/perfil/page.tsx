@@ -1,11 +1,15 @@
 import type { Metadata } from "next";
 import { connection } from "next/server";
-import Link from "next/link";
-import { ShieldCheck } from "lucide-react";
+import {
+  BadgeCheck,
+  Clock,
+  FileText,
+  Image as ImageIcon,
+  ShieldCheck,
+} from "lucide-react";
 import { requireUser } from "@/lib/session";
 import { prisma } from "@/lib/db";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
@@ -13,7 +17,8 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { PerfilForm, type PerfilValores } from "./perfil-form";
+import { VerificacaoBotao } from "@/app/motorista/verificacao-modal";
+import { paraVerificacaoValores } from "@/app/motorista/verificacao-valores";
 import { VALOR_MENSALIDADE_MT } from "@/lib/freta";
 
 // Rota autenticada: sempre dinâmica (sessão + dados em tempo real).
@@ -30,7 +35,7 @@ const STATUS: Record<string, { label: string; classe: string }> = {
       "bg-amber-100 text-amber-800 dark:bg-amber-500/15 dark:text-amber-400",
   },
   ativo: {
-    label: "Activo",
+    label: "Verificado",
     classe: "bg-green-100 text-green-800 dark:bg-primary/15 dark:text-primary",
   },
   bloqueado: {
@@ -47,36 +52,24 @@ export default async function PerfilPage() {
     where: { userId: user.id },
   });
 
-  if (!motorista) {
-    return (
-      <div className="mx-auto w-full max-w-3xl py-16 text-center">
-        <h1 className="text-2xl font-semibold">Complete o seu perfil</h1>
-        <p className="mt-2 text-muted-foreground">
-          Ainda não tem perfil de motorista. Crie-o para começar a receber
-          pedidos na sua praça.
-        </p>
-        <Button render={<Link href="/registo" />} className="mt-6">
-          Criar perfil de motorista
-        </Button>
-      </div>
-    );
-  }
+  const st = STATUS[motorista?.status ?? "pendente"] ?? STATUS.pendente;
+  const valores = paraVerificacaoValores(user, motorista);
+  const verificado = motorista?.status === "ativo";
 
-  const st = STATUS[motorista.status] ?? STATUS.pendente;
-
-  const valores: PerfilValores = {
-    nome: user.name,
-    telefone: motorista.telefone,
-    whatsapp: motorista.whatsapp ?? "",
-    praca: motorista.praca,
-    tipoViatura: motorista.tipoViatura,
-    matricula: motorista.matricula,
-    cargaMax: motorista.cargaMax,
-    servicos: motorista.servicos,
-    precoKm: motorista.precoKm ?? "",
-    observacoes: motorista.observacoes ?? "",
-    fotoUrl: motorista.fotoUrl ?? "",
-  };
+  const docs = motorista
+    ? [
+        Boolean(motorista.biFrenteUrl && motorista.biVersoUrl),
+        Boolean(
+          motorista.fotoFrenteUrl &&
+            motorista.fotoEsquerdaUrl &&
+            motorista.fotoDireitaUrl &&
+            motorista.fotoTraseiraUrl
+        ),
+      ]
+    : [false, false];
+  const biCompleto = docs[0];
+  const fotosCompletas = docs[1];
+  const enviado = Boolean(motorista?.documentosEnviadosEm);
 
   return (
     <div className="mx-auto w-full max-w-3xl space-y-6">
@@ -87,29 +80,103 @@ export default async function PerfilPage() {
             Estes dados aparecem nos resultados de pesquisa dos clientes.
           </p>
         </div>
-        <Badge className={st.classe}>{st.label}</Badge>
+        <Badge className={st.classe}>
+          {verificado && <BadgeCheck className="mr-1 size-3.5" />}
+          {st.label}
+        </Badge>
       </div>
 
-      {motorista.status === "pendente" && (
-        <div className="flex items-start gap-3 rounded-lg border border-amber-300 bg-amber-50 p-4 text-sm text-amber-900 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-200">
-          <ShieldCheck className="mt-0.5 size-4 shrink-0" />
+      {verificado && (
+        <div className="flex items-start gap-3 rounded-lg border border-primary/40 bg-primary/10 p-4 text-sm">
+          <BadgeCheck className="mt-0.5 size-4 shrink-0 text-primary-text" />
           <p>
-            O perfil fica visível após verificação presencial na praça e
-            confirmação da mensalidade de{" "}
-            <strong>{VALOR_MENSALIDADE_MT} MT/mês</strong> pela administração.
+            O seu perfil está <strong>verificado</strong> e visível para os
+            clientes com o selo da FRETA.
           </p>
         </div>
       )}
 
+      {!verificado && motorista?.status === "bloqueado" && (
+        <div className="flex items-start gap-3 rounded-lg border border-red-300 bg-red-50 p-4 text-sm text-red-900 dark:border-red-500/30 dark:bg-red-500/10 dark:text-red-200">
+          <ShieldCheck className="mt-0.5 size-4 shrink-0" />
+          <p>
+            O seu perfil está bloqueado. Contacte a administração
+            {motorista.rejeicaoMotivo ? ` — motivo: ${motorista.rejeicaoMotivo}` : ""}.
+          </p>
+        </div>
+      )}
+
+      {!verificado && motorista?.status !== "bloqueado" && (
+        <div className="flex items-start gap-3 rounded-lg border border-amber-300 bg-amber-50 p-4 text-sm text-amber-900 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-200">
+          <ShieldCheck className="mt-0.5 size-4 shrink-0" />
+          <div className="space-y-1">
+            <p className="font-medium">
+              {enviado
+                ? "Documentos enviados — aguarda validação da administração."
+                : "Envie o BI e as fotos do veículo para o perfil ficar visível."}
+            </p>
+            <p>
+              O cadastro é <strong>grátis</strong>. A mensalidade de{" "}
+              <strong>{VALOR_MENSALIDADE_MT} MT/mês</strong> é confirmada pela
+              administração.
+            </p>
+            {motorista?.rejeicaoMotivo && (
+              <p className="font-medium">
+                Motivo da última rejeição: {motorista.rejeicaoMotivo}
+              </p>
+            )}
+          </div>
+        </div>
+      )}
+
       <Card>
-        <CardHeader>
-          <CardTitle className="text-base">Dados do perfil</CardTitle>
-          <CardDescription>
-            Contacto, viatura, praça e serviços que oferece.
-          </CardDescription>
+        <CardHeader className="flex flex-row items-center justify-between space-y-0">
+          <div>
+            <CardTitle className="text-base">Dados e documentos</CardTitle>
+            <CardDescription>
+              Contacto, viatura, BI e fotos do carro.
+            </CardDescription>
+          </div>
+          <VerificacaoBotao
+            valores={valores}
+            verificado={verificado}
+            variant="outline"
+          >
+            <FileText className="size-4" />
+            Abrir formulário
+          </VerificacaoBotao>
         </CardHeader>
-        <CardContent>
-          <PerfilForm valores={valores} />
+        <CardContent className="grid gap-3 text-sm sm:grid-cols-2">
+          <div className="flex items-center gap-2 rounded-md border p-3">
+            {biCompleto ? (
+              <BadgeCheck className="size-4 shrink-0 text-primary-text" />
+            ) : (
+              <FileText className="size-4 shrink-0 text-muted-foreground" />
+            )}
+            <span>
+              Documento de identidade (BI){" "}
+              <strong>{biCompleto ? "completo" : "em falta"}</strong>
+            </span>
+          </div>
+          <div className="flex items-center gap-2 rounded-md border p-3">
+            {fotosCompletas ? (
+              <BadgeCheck className="size-4 shrink-0 text-primary-text" />
+            ) : (
+              <ImageIcon className="size-4 shrink-0 text-muted-foreground" />
+            )}
+            <span>
+              Fotos do veículo{" "}
+              <strong>{fotosCompletas ? "completas" : "em falta"}</strong>
+            </span>
+          </div>
+          <div className="flex items-center gap-2 rounded-md border p-3 sm:col-span-2">
+            <Clock className="size-4 shrink-0 text-muted-foreground" />
+            <span>
+              {enviado
+                ? `Submetido em ${motorista?.documentosEnviadosEm?.toLocaleDateString("pt-PT")}`
+                : "Ainda não submetido para verificação"}
+            </span>
+          </div>
         </CardContent>
       </Card>
     </div>

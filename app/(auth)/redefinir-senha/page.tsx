@@ -1,12 +1,13 @@
 "use client";
 
-import { Suspense, useActionState } from "react";
+import { Suspense, useActionState, useEffect } from "react";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Loader2, CheckCircle2 } from "lucide-react";
+import { Loader2 } from "lucide-react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -52,11 +53,22 @@ export default function RedefinirSenhaPage() {
 }
 
 function RedefinirForm() {
+  const router = useRouter();
   const searchParams = useSearchParams();
   const tokenFromUrl = searchParams.get("token") ?? "";
   const hasErrorParam = searchParams.get("error") === "INVALID_TOKEN";
 
   const [state, formAction, isPending] = useActionState(resetPasswordAction, {});
+
+  // Resultados da acção → toast (sucesso redireciona para o login).
+  useEffect(() => {
+    if (state?.success) {
+      toast.success(state.message ?? "Palavra-passe redefinida!");
+      router.push("/entrar");
+    } else if (state?.message) {
+      toast.error(state.message);
+    }
+  }, [state, router]);
 
   const form = useForm<Values>({
     resolver: zodResolver(schema),
@@ -71,25 +83,6 @@ function RedefinirForm() {
       token: tokenFromUrl,
     },
   });
-
-  if (state?.success) {
-    return (
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <CheckCircle2 className="size-5 text-primary-text" />
-            Palavra-passe redefinida
-          </CardTitle>
-          <CardDescription>{state.message}</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Button render={<Link href="/entrar" />} className="w-full">
-            Entrar
-          </Button>
-        </CardContent>
-      </Card>
-    );
-  }
 
   return (
     <Card>
@@ -158,10 +151,6 @@ function RedefinirForm() {
                 </FormItem>
               )}
             />
-
-            <FormError>
-              {state?.success ? null : state?.message}
-            </FormError>
 
             <Button
               type="submit"

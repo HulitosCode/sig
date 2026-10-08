@@ -11,6 +11,18 @@ export const SERVICOS = [
 
 export type ServicoValue = (typeof SERVICOS)[number]['value']
 
+// Tipos de carro (select do cadastro de verificação).
+export const TIPOS_CARRO = [
+  'Carrinha de passageiros',
+  'Carrinha de carga',
+  'Camião ligeiro',
+  'Camião',
+  'Pick-up',
+  'Furgão',
+  'Trator',
+  'Outro',
+] as const
+
 export const PRACAS = [
   'Maputo',
   'Matola',
@@ -39,7 +51,7 @@ export const DISPONIBILIDADES = [
 ] as const
 
 export const VALOR_MENSALIDADE_MT = 480
-export const VALOR_CADASTRO_MT = 120
+// Cadastro de motorista: grátis (sem custo de registo).
 
 // Contactos de suporte FRETA (chamadas e WhatsApp).
 export const SUPORTE = {

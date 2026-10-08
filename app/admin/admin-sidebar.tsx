@@ -1,6 +1,6 @@
 "use client";
 
-import { Inbox, LayoutDashboard, Users } from "lucide-react";
+import { FileCheck, Inbox, LayoutDashboard, Users } from "lucide-react";
 import { AppSidebar, type NavSection } from "@/components/app-sidebar";
 
 /**
@@ -11,9 +11,11 @@ import { AppSidebar, type NavSection } from "@/components/app-sidebar";
 export function AdminSidebar({
   pendentes,
   pedidosRecentes,
+  verificacoes,
 }: {
   pendentes: number;
   pedidosRecentes: number;
+  verificacoes: number;
 }) {
   const seccoes: NavSection[] = [
     {
@@ -25,6 +27,12 @@ export function AdminSidebar({
           label: "Motoristas",
           icon: Users,
           badge: pendentes,
+        },
+        {
+          href: "/admin/motoristas?docs=1",
+          label: "Verificações",
+          icon: FileCheck,
+          badge: verificacoes,
         },
         {
           href: "/admin/pedidos",

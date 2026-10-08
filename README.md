@@ -2,7 +2,7 @@
 
 **Mudanças, cargas e transporte num só lugar.**
 
-Marketplace PWA que liga clientes a motoristas verificados em Moçambique — para mudanças de casa, mercadorias, móveis, material de construção e cargas pesadas. Os clientes usam o site **sem conta**; os motoristas criam perfil, são verificados pelo admin e recebem pedidos da sua praça por **120 MT/mês**.
+Marketplace PWA que liga clientes a motoristas verificados em Moçambique — para mudanças de casa, mercadorias, móveis, material de construção e cargas pesadas. Os clientes usam o site **sem conta**; os motoristas criam conta **grátis**, enviam documentos (BI + fotos do veículo) para validação pelo admin (selo verificado) e recebem pedidos da sua praça por **480 MT/mês**.
 
 ## Stack
 
@@ -107,8 +107,9 @@ Sem `SMTP_HOST`/`SMTP_EMAIL`/`SMTP_PASSWORD`, os emails são ignorados com aviso
 ## Limitações conhecidas (MVP)
 
 - **Rate-limit em memória** (`lib/rate-limit.ts`) — adequado a uma única instância; para escala horizontal trocar por Redis/Upstash com a mesma interface.
-- **Sem pagamentos online** — a mensalidade de 120 MT é confirmada manualmente pelo admin (M-Pesa/e-Mola fora do MVP).
-- **Fotografia por URL** — sem upload de ficheiros (evita storage no MVP).
+- **Sem pagamentos online** — a mensalidade de 480 MT é confirmada manualmente pelo admin (M-Pesa/e-Mola fora do MVP).
+- **Fotografia de perfil por URL** — os documentos de verificação (BI + fotos do carro) usam UploadThing; a foto de perfil continua a ser um link.
+- **Verificação de documentos pelo admin** — aprovação/rejeição com motivo notificado por email; não substitui verificação presencial na praça.
 - **Sem GPS/timing real** — o estado do motorista é manual (Disponível/Ocupado/Indisponível).
 - **Sem matching sofisticado** — filtra por serviço e ordena por praça → disponibilidade → avaliação.
 - **`npm run db:push` em vez de migrations** — para produção com dados reais, migrar para `prisma migrate dev`.

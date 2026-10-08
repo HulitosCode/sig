@@ -2,6 +2,7 @@
 
 import { useTransition } from "react";
 import { Loader2 } from "lucide-react";
+import { toast } from "sonner";
 import { setDisponibilidadeAction } from "./actions";
 
 const ESTADOS = [
@@ -20,7 +21,17 @@ export function DisponibilidadeControl({
   function definir(valor: "disponivel" | "ocupado" | "indisponivel") {
     if (valor === atual) return;
     startTransition(async () => {
-      await setDisponibilidadeAction(valor);
+      try {
+        const r = await setDisponibilidadeAction(valor);
+        if (r.success) {
+          const rotulo = ESTADOS.find((e) => e.value === valor)?.label ?? "";
+          toast.success(`Disponibilidade: ${rotulo}.`);
+        } else {
+          toast.error(r.message ?? "Não foi possível alterar a disponibilidade.");
+        }
+      } catch {
+        toast.error("Erro de ligação. Tente novamente.");
+      }
     });
   }
 

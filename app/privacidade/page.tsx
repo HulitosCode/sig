@@ -160,7 +160,8 @@ export default function PrivacidadePage() {
               ligar clientes e motoristas e mostrar os pedidos da praça;
             </li>
             <li>
-              gerir contas, sessões e a verificação presencial dos perfis;
+              gerir contas, sessões e a verificação documental dos perfis (BI e
+              fotos do veículo);
             </li>
             <li>
               gerir o cadastro, o plano mensal e as confirmações de pagamento;
@@ -223,11 +224,11 @@ export default function PrivacidadePage() {
 
         <Secao id="pagamentos" titulo="5. Pagamentos">
           <p>
-            O cadastro de motorista tem o custo de{" "}
-            <strong className="text-foreground">120 MT</strong> e o plano mensal
-            custa <strong className="text-foreground">480 MT</strong>. O
-            pagamento é feito por M-Pesa ou e-Mola e confirmado manualmente
-            pela administração.
+            O cadastro de motorista é <strong className="text-foreground">grátis</strong>{" "}
+            e o plano mensal custa{" "}
+            <strong className="text-foreground">480 MT</strong>. O pagamento é
+            feito por M-Pesa ou e-Mola e confirmado manualmente pela
+            administração.
           </p>
           <ul className="list-disc space-y-1.5 pl-5">
             <li>
@@ -349,8 +350,8 @@ export default function PrivacidadePage() {
               endereço IP;
             </li>
             <li>
-              verificação presencial dos motoristas antes da publicação do
-              perfil.
+              verificação dos documentos (BI e fotos do veículo) antes da
+              publicação do perfil.
             </li>
           </ul>
           <p>

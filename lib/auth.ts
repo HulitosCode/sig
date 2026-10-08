@@ -17,9 +17,12 @@ export const auth = betterAuth({
   emailAndPassword: {
     enabled: true,
     minPasswordLength: 8,
-    // Envio do email de recuperação de senha
+    // Envio do email de recuperação de senha — dispara sem esperar (fire-and-forget)
+    // para o pedido não ficar bloqueado à espera da ligação SMTP.
     sendResetPassword: async ({ user, url }) => {
-      await sendResetPasswordEmail(user.email, url)
+      void sendResetPasswordEmail(user.email, url).catch((err) => {
+        console.error('[Email] Falha ao enviar redefinição:', err)
+      })
     },
   },
   user: {
@@ -35,13 +38,12 @@ export const auth = betterAuth({
   databaseHooks: {
     user: {
       create: {
+        // Devolve a promise de imediato; o email segue em background —
+        // um await aqui (SMTP real) deixa o registo "a rodar" 15-30s.
         after: async (user) => {
-          // Boas-vindas (no-op se SMTP não configurado)
-          try {
-            await sendWelcomeEmail(user.email, user.name)
-          } catch (err) {
+          void sendWelcomeEmail(user.email, user.name).catch((err) => {
             console.error('[Email] Falha ao enviar boas-vindas:', err)
-          }
+          })
         },
       },
     },

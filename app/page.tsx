@@ -15,6 +15,7 @@ import {
   UserRound,
   Wallet,
   MoveRight,
+  Zap,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -24,7 +25,6 @@ import {
   PRACAS,
   SERVICOS,
   SUPORTE,
-  VALOR_CADASTRO_MT,
   VALOR_MENSALIDADE_MT,
   formatMt,
 } from "@/lib/freta";
@@ -302,11 +302,9 @@ export default function HomePage() {
               </ul>
               <div className="mt-auto space-y-3">
                 <p className="rounded-lg border bg-muted/40 px-3 py-2 text-center text-sm">
-                  Cadastro de{" "}
-                  <strong className="text-primary-text">
-                    {formatMt(VALOR_CADASTRO_MT)} MT
-                  </strong>{" "}
-                  + plano mensal de{" "}
+                  Cadastro{" "}
+                  <strong className="text-primary-text">grátis</strong> + plano
+                  mensal de{" "}
                   <strong className="text-primary-text">
                     {formatMt(VALOR_MENSALIDADE_MT)} MT
                   </strong>
@@ -315,7 +313,7 @@ export default function HomePage() {
                   className="w-full gap-2"
                   render={<Link href="/registo" />}
                 >
-                  Criar conta de motorista
+                  Criar conta grátis
                   <MoveRight className="size-4" />
                 </Button>
               </div>
@@ -338,7 +336,7 @@ export default function HomePage() {
             Preços simples e transparentes
           </h2>
           <p className="mx-auto mt-2 max-w-xl text-muted-foreground">
-            Pedir transporte é grátis. Para motoristas: um cadastro único e um
+            Pedir transporte é grátis. Para motoristas: cadastro grátis e um
             plano mensal — sem comissões por viagem.
           </p>
         </div>
@@ -372,27 +370,22 @@ export default function HomePage() {
             </CardContent>
           </Card>
 
-          {/* Cadastro */}
+          {/* Cadastro (grátis) */}
           <Card className="flex flex-col">
             <CardHeader>
               <CardTitle className="text-base">
                 Cadastro do motorista
               </CardTitle>
-              <p className="text-3xl font-bold">
-                {formatMt(VALOR_CADASTRO_MT)} MT
-                <span className="text-base font-normal text-muted-foreground">
-                  {" "}
-                  único
-                </span>
-              </p>
+              <p className="text-3xl font-bold text-primary-text">Grátis</p>
               <p className="text-sm text-muted-foreground">
-                Criação e verificação do perfil na plataforma.
+                Criação e verificação do perfil na plataforma — sem custos de
+                cadastro.
               </p>
             </CardHeader>
             <CardContent className="flex flex-1 flex-col gap-4">
               <ul className="space-y-2 text-sm">
                 <Check>Conta e perfil público</Check>
-                <Check>Verificação presencial na praça</Check>
+                <Check>Verificação de documentos (BI + fotos do veículo)</Check>
                 <Check>Aparece nas pesquisas dos clientes</Check>
                 <Check>Painel com pedidos e avaliações</Check>
               </ul>
@@ -401,19 +394,20 @@ export default function HomePage() {
                 className="mt-auto w-full"
                 render={<Link href="/registo" />}
               >
-                Criar conta
+                Criar conta grátis
               </Button>
             </CardContent>
           </Card>
 
           {/* Plano mensal (destaque) */}
-          <Card className="relative flex flex-col border-primary/60 shadow-lg ring-1 ring-primary/30">
-            <Badge className="absolute -top-3 left-1/2 -translate-x-1/2">
-              Mais escolhido
+          <Card className="relative flex flex-col overflow-visible border-primary/60 shadow-xl ring-2 ring-primary/40">
+            <Badge className="absolute -top-3.5 left-1/2 -translate-x-1/2 gap-1.5 bg-primary px-3 py-1 text-sm font-bold text-primary-foreground shadow-md shadow-primary/30">
+              <Zap className="size-3.5" aria-hidden />
+              Recomendado · Mais escolhido
             </Badge>
             <CardHeader>
               <CardTitle className="text-base">Plano mensal</CardTitle>
-              <p className="text-3xl font-bold">
+              <p className="text-3xl font-bold text-primary-text">
                 {formatMt(VALOR_MENSALIDADE_MT)} MT
                 <span className="text-base font-normal text-muted-foreground">
                   {" "}
