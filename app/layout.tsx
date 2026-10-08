@@ -9,6 +9,7 @@ import { Toaster } from "@/components/ui/sonner";
 import { PwaRegister } from "@/components/pwa/pwa-register";
 import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
+import { SiteFooterShell } from "@/components/site-footer-shell";
 
 // Sans-serif geométrica da marca (pt-MZ: subset latin cobre acentos).
 const poppins = Poppins({
@@ -83,7 +84,9 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
             <NextSSRPlugin routerConfig={uploadthingSSRConfig} />
             <SiteHeader />
             <main className="flex-1">{children}</main>
-            <SiteFooter />
+            <SiteFooterShell>
+              <SiteFooter />
+            </SiteFooterShell>
             <Toaster position="top-right" richColors closeButton />
           </TooltipProvider>
         </ThemeProvider>
