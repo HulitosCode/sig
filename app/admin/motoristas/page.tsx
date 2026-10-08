@@ -12,11 +12,8 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import {
-  MotoristaAccoes,
-  STATUS_MOTORISTA,
-  type MotoristaLinha,
-} from "./motorista-accoes";
+import { MotoristaAccoes, type MotoristaLinha } from "./motorista-accoes";
+import { STATUS_MOTORISTA } from "./status-motorista";
 import { CriarMotoristaDialog } from "./criar-motorista-dialog";
 import { SERVICO_LABELS, SUPORTE } from "@/lib/freta";
 import { MessageCircle, Phone } from "lucide-react";

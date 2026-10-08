@@ -86,26 +86,9 @@ export type MotoristaLinha = {
   } | null;
 };
 
-/** Estados do perfil — cores com suporte a dark mode. */
-export const STATUS_MOTORISTA: Record<
-  string,
-  { label: string; classe: string }
-> = {
-  pendente: {
-    label: "Pendente",
-    classe:
-      "bg-amber-100 text-amber-800 dark:bg-amber-500/15 dark:text-amber-400",
-  },
-  ativo: {
-    label: "Verificado",
-    classe:
-      "bg-green-100 text-green-800 dark:bg-primary/15 dark:text-primary",
-  },
-  bloqueado: {
-    label: "Bloqueado",
-    classe: "bg-red-100 text-red-800 dark:bg-red-500/15 dark:text-red-400",
-  },
-};
+// Os Server Components também usam os valores — vêm do módulo partilhado,
+// porque exportá-los daqui ("use client") daria uma client reference.
+import { STATUS_MOTORISTA } from "./status-motorista";
 
 function formatarData(iso: string | null) {
   if (!iso) return "—";
