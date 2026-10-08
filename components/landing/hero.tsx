@@ -32,7 +32,7 @@ export function Hero() {
             className="w-fit gap-1.5 border-primary/50 bg-primary/10 text-primary-text"
           >
             <Truck className="size-3.5" />
-            Mobilidade feita para Maputo!
+            Mobilidade feita para Moçambique!
           </Badge>
 
           <div className="flex flex-col gap-4">
