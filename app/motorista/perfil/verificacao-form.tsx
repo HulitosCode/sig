@@ -249,7 +249,10 @@ export function VerificacaoForm({
           <Select
             name="provincia"
             value={provincia}
-            onValueChange={setProvincia}
+            onValueChange={(v) => {
+              // Base UI envia string | null — só manda para estado válido.
+              if (v) setProvincia(v);
+            }}
           >
             <SelectTrigger id="v-provincia" className="w-full">
               <SelectValue />
