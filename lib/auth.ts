@@ -3,6 +3,7 @@ import { prismaAdapter } from 'better-auth/adapters/prisma'
 import { nextCookies } from 'better-auth/next-js'
 import { prisma } from '@/lib/db'
 import { sendResetPasswordEmail, sendWelcomeEmail } from '@/lib/email'
+import { deleteUploadedImage } from '@/lib/uploadthing'
 
 export const auth = betterAuth({
   database: prismaAdapter(prisma, {
@@ -32,6 +33,36 @@ export const auth = betterAuth({
         required: false,
         defaultValue: 'motorista',
         input: false, // nunca definido pelo cliente
+      },
+    },
+    deleteUser: {
+      enabled: true,
+      // Antes de a cascata Prisma apagar a conta, sai do UploadThing tudo
+      // o que ela referenciava (foto de perfil + documentos/fotos do carro).
+      // deleteUploadedImage nunca lança — falhas são logadas, não bloqueiam.
+      beforeDelete: async (user) => {
+        const motorista = await prisma.motorista.findUnique({
+          where: { userId: user.id },
+          select: {
+            fotoUrl: true,
+            biFrenteUrl: true,
+            biVersoUrl: true,
+            fotoFrenteUrl: true,
+            fotoEsquerdaUrl: true,
+            fotoDireitaUrl: true,
+            fotoTraseiraUrl: true,
+          },
+        })
+        await Promise.all([
+          deleteUploadedImage(user.image),
+          deleteUploadedImage(motorista?.fotoUrl),
+          deleteUploadedImage(motorista?.biFrenteUrl),
+          deleteUploadedImage(motorista?.biVersoUrl),
+          deleteUploadedImage(motorista?.fotoFrenteUrl),
+          deleteUploadedImage(motorista?.fotoEsquerdaUrl),
+          deleteUploadedImage(motorista?.fotoDireitaUrl),
+          deleteUploadedImage(motorista?.fotoTraseiraUrl),
+        ])
       },
     },
   },

@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { LogOut, Menu, LayoutDashboard, ShieldCheck, Truck, Search } from "lucide-react";
+import { LogOut, Menu, LayoutDashboard, ShieldCheck, Truck, Search, Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import {
@@ -16,6 +16,7 @@ import {
 import { NavLinks } from "@/components/nav-links";
 import { CriarContaModal } from "@/components/conta/criar-conta-modal";
 import { EntrarModal } from "@/components/conta/entrar-modal";
+import { DefinicoesContaDialog } from "@/components/conta/definicoes-conta-dialog";
 import { authClient } from "@/lib/auth-client";
 
 type MobileNavUser = { name: string; email: string; role: string } | null;
@@ -25,6 +26,7 @@ export function MobileNav({ user }: { user: MobileNavUser }) {
   const [open, setOpen] = useState(false);
   const [contaAberta, setContaAberta] = useState(false);
   const [entrarAberto, setEntrarAberto] = useState(false);
+  const [definicoesAbertas, setDefinicoesAbertas] = useState(false);
   const router = useRouter();
 
   function fechar() {
@@ -102,6 +104,15 @@ export function MobileNav({ user }: { user: MobileNavUser }) {
                     <ShieldCheck className="size-4" /> Painel admin
                   </Button>
                 )}
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    fechar();
+                    setDefinicoesAbertas(true);
+                  }}
+                >
+                  <Settings className="size-4" /> Definições da conta
+                </Button>
                 <Button variant="ghost" onClick={handleLogout}>
                   <LogOut className="size-4" /> Terminar sessão
                 </Button>
@@ -134,6 +145,14 @@ export function MobileNav({ user }: { user: MobileNavUser }) {
       {/* Modais fora do Sheet: fechar o menu não os desmonta. */}
       <EntrarModal open={entrarAberto} onOpenChange={setEntrarAberto} />
       <CriarContaModal open={contaAberta} onOpenChange={setContaAberta} />
+      {user && (
+        <DefinicoesContaDialog
+          key={user.name}
+          open={definicoesAbertas}
+          onOpenChange={setDefinicoesAbertas}
+          user={{ name: user.name, email: user.email }}
+        />
+      )}
     </>
   );
 }
