@@ -107,6 +107,18 @@ const DOC_FIELDS = [
   'fotoTraseiraUrl',
 ] as const
 
+// Todos os campos de imagem do motorista (docs + fotografia de perfil).
+// Qualquer imagem removida/substituída tem de sair também do UploadThing.
+const CAMPOS_IMAGEM = [
+  'fotoUrl',
+  'biFrenteUrl',
+  'biVersoUrl',
+  'fotoFrenteUrl',
+  'fotoEsquerdaUrl',
+  'fotoDireitaUrl',
+  'fotoTraseiraUrl',
+] as const
+
 /**
  * Guarda o perfil completo do motorista + documentos.
  * Se ainda não está verificado (status ≠ "ativo"), exige todas as imagens,
@@ -226,6 +238,19 @@ export async function submeterVerificacaoAction(
       }),
     ])
 
+    // Imagens substituídas ou removidas nesta submissão saem do UploadThing
+    // (rede de segurança para o cliente não deixar ficheiros órfãos).
+    const imagensSubstituidas = CAMPOS_IMAGEM.flatMap((campo) => {
+      const antigo = existente?.[campo] ?? null
+      const actual = dados[campo] ?? null
+      return antigo && antigo !== actual ? [antigo] : []
+    })
+    if (imagensSubstituidas.length > 0) {
+      after(() =>
+        Promise.all(imagensSubstituidas.map(deleteUploadedImage))
+      )
+    }
+
     if (deveNotificar) {
       const destino = process.env.ADMIN_NOTIF_EMAIL || process.env.ADMIN_EMAIL
       if (destino) {
@@ -256,7 +281,8 @@ export async function submeterVerificacaoAction(
   }
 }
 
-// Remove uma imagem de um slot de upload (apenas das suas próprias fotos).
+// Remove uma imagem de um slot de upload (fotos do próprio perfil ou uploads
+// ainda não submetidos). Qualquer remoção apaga o ficheiro no UploadThing.
 export async function removerImagemAction(url: string): Promise<void> {
   try {
     const session = await getSession()
@@ -265,25 +291,38 @@ export async function removerImagemAction(url: string): Promise<void> {
     const motorista = await prisma.motorista.findUnique({
       where: { userId: session.user.id },
     })
-    if (!motorista) return
 
-    const minhas = DOC_FIELDS.map(
-      (campo) => motorista[campo] as string | null
-    ).filter(Boolean)
-    if (!minhas.includes(url)) return // não é uma imagem sua
+    const minha = motorista
+      ? CAMPOS_IMAGEM.some((campo) => motorista[campo] === url)
+      : false
 
-    await deleteUploadedImage(url)
-    await prisma.motorista.update({
-      where: { userId: session.user.id },
-      data: Object.fromEntries(
-        DOC_FIELDS.map((campo) => [
-          campo,
-          motorista[campo] === url ? null : motorista[campo],
-        ])
-      ),
+    // Nunca apagar imagens referenciadas noutro perfil.
+    const emUsoNoutro = await prisma.motorista.findFirst({
+      where: {
+        ...(motorista ? { NOT: { id: motorista.id } } : {}),
+        OR: CAMPOS_IMAGEM.map((campo) => ({ [campo]: url })),
+      },
+      select: { id: true },
     })
-    revalidatePath('/motorista')
-    revalidatePath('/motorista/perfil')
+    if (emUsoNoutro) return
+
+    // Ficheiro próprio ou não referenciado por ninguém (upload recém-feito
+    // que o utilizador substituiu/removeu antes de submeter) — sai do UT.
+    await deleteUploadedImage(url)
+
+    if (minha && motorista) {
+      await prisma.motorista.update({
+        where: { userId: session.user.id },
+        data: Object.fromEntries(
+          CAMPOS_IMAGEM.map((campo) => [
+            campo,
+            motorista[campo] === url ? null : motorista[campo],
+          ])
+        ),
+      })
+      revalidatePath('/motorista')
+      revalidatePath('/motorista/perfil')
+    }
   } catch (error) {
     console.error('[Motorista] removerImagemAction:', error)
   }

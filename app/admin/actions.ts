@@ -12,6 +12,7 @@ import {
   sendMotoristaVerificadoEmail,
   sendMotoristaRejeitadoEmail,
 } from '@/lib/email'
+import { deleteUploadedImage } from '@/lib/uploadthing'
 
 type ActionState = {
   success?: boolean
@@ -152,12 +153,37 @@ export async function removerMotoristaAction(motoristaId: number): Promise<Actio
   try {
     const motorista = await prisma.motorista.findUnique({
       where: { id: motoristaId },
-      select: { userId: true },
+      select: {
+        userId: true,
+        fotoUrl: true,
+        biFrenteUrl: true,
+        biVersoUrl: true,
+        fotoFrenteUrl: true,
+        fotoEsquerdaUrl: true,
+        fotoDireitaUrl: true,
+        fotoTraseiraUrl: true,
+      },
     })
     if (!motorista) return { success: false, message: 'Motorista não encontrado.' }
 
+    const imagens = [
+      motorista.fotoUrl,
+      motorista.biFrenteUrl,
+      motorista.biVersoUrl,
+      motorista.fotoFrenteUrl,
+      motorista.fotoEsquerdaUrl,
+      motorista.fotoDireitaUrl,
+      motorista.fotoTraseiraUrl,
+    ].filter((u): u is string => Boolean(u))
+
     // Apagar o utilizador remove o perfil em cascata (onDelete: Cascade).
     await prisma.user.delete({ where: { id: motorista.userId } })
+
+    // As imagens associadas saem também do UploadThing.
+    if (imagens.length > 0) {
+      after(() => Promise.all(imagens.map(deleteUploadedImage)))
+    }
+
     revalidatePath('/admin')
     revalidatePath('/admin/motoristas')
     return { success: true, message: 'Motorista e conta removidos.' }

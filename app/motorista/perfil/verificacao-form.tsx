@@ -45,7 +45,10 @@ export type VerificacaoValores = {
   fotoTraseiraUrl: string;
 };
 
+// Imagens do formulário: docs de verificação + fotografia de perfil
+// (todas pelo mesmo caminho de upload/remoção).
 type DocCampo =
+  | "fotoUrl"
   | "biFrenteUrl"
   | "biVersoUrl"
   | "fotoFrenteUrl"
@@ -110,6 +113,7 @@ export function VerificacaoForm({
   );
   const [servicos, setServicos] = useState<string[]>(valores.servicos);
   const [docs, setDocs] = useState<Record<DocCampo, string>>({
+    fotoUrl: valores.fotoUrl,
     biFrenteUrl: valores.biFrenteUrl,
     biVersoUrl: valores.biVersoUrl,
     fotoFrenteUrl: valores.fotoFrenteUrl,
@@ -196,16 +200,16 @@ export function VerificacaoForm({
           <CampoErro erros={erros} campo="whatsapp" />
         </div>
         <div className="space-y-1.5 sm:col-span-2">
-          <Label htmlFor="v-fotoUrl">Link da fotografia de perfil (opcional)</Label>
-          <Input
+          <UploadSlot
             id="v-fotoUrl"
-            name="fotoUrl"
-            type="url"
-            inputMode="url"
-            placeholder="https://..."
-            defaultValue={valores.fotoUrl}
+            label="Fotografia de perfil (opcional)"
+            hint="JPG/PNG até 4MB"
+            url={docs.fotoUrl}
+            onChange={(v) => alterarDoc("fotoUrl", v)}
+            erro={erros.fotoUrl?.[0]}
+            disabled={isPending}
           />
-          <CampoErro erros={erros} campo="fotoUrl" />
+          <input type="hidden" name="fotoUrl" value={docs.fotoUrl} />
         </div>
       </Secao>
 
