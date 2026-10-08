@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuGroup,
   DropdownMenuLabel,
   DropdownMenuRadioGroup,
   DropdownMenuRadioItem,
@@ -32,7 +33,10 @@ export function ThemeMenu({ className }: { className?: string }) {
         <span className="sr-only">Alterar tema</span>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
-        <DropdownMenuLabel>Tema</DropdownMenuLabel>
+        {/* Base UI exige que a GroupLabel esteja dentro de Menu.Group. */}
+        <DropdownMenuGroup>
+          <DropdownMenuLabel>Tema</DropdownMenuLabel>
+        </DropdownMenuGroup>
         <DropdownMenuRadioGroup
           value={theme ?? "system"}
           onValueChange={setTheme}
