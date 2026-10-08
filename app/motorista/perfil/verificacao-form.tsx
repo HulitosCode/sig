@@ -21,13 +21,23 @@ import {
   submeterVerificacaoAction,
   removerImagemAction,
 } from "@/app/motorista/actions";
-import { PRACAS, SERVICOS, TIPOS_CARRO } from "@/lib/freta";
+import {
+  PROVINCIAS,
+  PRACAS,
+  PRACAS_INFO,
+  SERVICOS,
+  TIPOS_CARRO,
+  pracasDaProvincia,
+  type PracaValue,
+} from "@/lib/freta";
 
 export type VerificacaoValores = {
   nome: string;
   telefone: string;
   whatsapp: string;
+  provincia: string;
   praca: string;
+  rotaDestino: string;
   tipoViatura: string;
   modelo: string;
   ano: string;
@@ -112,6 +122,13 @@ export function VerificacaoForm({
     {}
   );
   const [servicos, setServicos] = useState<string[]>(valores.servicos);
+  // Província em estado: filtra as praças em cascata (select controlado).
+  // A praça guardada é a fonte de verdade (linhas antigas sem província).
+  const [provincia, setProvincia] = useState<string>(
+    (valores.praca && PRACAS_INFO[valores.praca as PracaValue]?.provincia) ||
+      valores.provincia ||
+      PROVINCIAS[0]
+  );
   const [docs, setDocs] = useState<Record<DocCampo, string>>({
     fotoUrl: valores.fotoUrl,
     biFrenteUrl: valores.biFrenteUrl,
@@ -159,6 +176,14 @@ export function VerificacaoForm({
     : valores.tipoViatura
       ? [valores.tipoViatura, ...TIPOS_CARRO]
       : [...TIPOS_CARRO];
+
+  // Praças da província em selecção (cascata). A praça guardada manda:
+  // se pertencer a outra província (linhas antigas), seguimos a praça.
+  const pracasDaProv = pracasDaProvincia(provincia);
+  const pracaInicial =
+    valores.praca && pracasDaProv.includes(valores.praca as PracaValue)
+      ? valores.praca
+      : pracasDaProv[0];
 
   return (
     <form action={formAction} noValidate className="space-y-5">
@@ -215,15 +240,40 @@ export function VerificacaoForm({
 
       <Separator />
 
-      <Secao titulo="Viatura" descricao="Dados do veículo que vai usar nos fretes.">
+      <Secao
+        titulo="Localização e rota"
+        descricao="Onde está e para onde vai — os pedidos com origem/destino compatíveis são distribuídos primeiro."
+      >
+        <div className="space-y-1.5">
+          <Label htmlFor="v-provincia">Província</Label>
+          <Select
+            name="provincia"
+            value={provincia}
+            onValueChange={setProvincia}
+          >
+            <SelectTrigger id="v-provincia" className="w-full">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {PROVINCIAS.map((prov) => (
+                <SelectItem key={prov} value={prov}>
+                  {prov}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <CampoErro erros={erros} campo="provincia" />
+        </div>
+
         <div className="space-y-1.5">
           <Label htmlFor="v-praca">Praça</Label>
-          <Select name="praca" defaultValue={valores.praca || PRACAS[0]}>
+          {/* key: remonta ao mudar a província e repõe o valor válido. */}
+          <Select key={provincia} name="praca" defaultValue={pracaInicial}>
             <SelectTrigger id="v-praca" className="w-full">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              {PRACAS.map((praca) => (
+              {pracasDaProv.map((praca) => (
                 <SelectItem key={praca} value={praca}>
                   {praca}
                 </SelectItem>
@@ -233,6 +283,33 @@ export function VerificacaoForm({
           <CampoErro erros={erros} campo="praca" />
         </div>
 
+        <div className="space-y-1.5 sm:col-span-2">
+          <Label htmlFor="v-rotaDestino">
+            Destino da rota (opcional)
+          </Label>
+          <Select name="rotaDestino" defaultValue={valores.rotaDestino || undefined}>
+            <SelectTrigger id="v-rotaDestino" className="w-full">
+              <SelectValue placeholder="Sem rota definida" />
+            </SelectTrigger>
+            <SelectContent>
+              {PRACAS.map((praca) => (
+                <SelectItem key={praca} value={praca}>
+                  De {valores.praca || "sua praça"} para {praca}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <CampoErro erros={erros} campo="rotaDestino" />
+          <p className="text-xs text-muted-foreground">
+            Se costuma fazer um trajecto (ex.: Maputo → Matola), indique o
+            destino — os clientes que vão para lá aparecem-lhe primeiro.
+          </p>
+        </div>
+      </Secao>
+
+      <Separator />
+
+      <Secao titulo="Viatura" descricao="Dados do veículo que vai usar nos fretes.">
         <div className="space-y-1.5">
           <Label htmlFor="v-tipoViatura">Tipo de carro</Label>
           <Select

@@ -5,7 +5,9 @@ type Utilizador = { id: string; name: string }
 type MotoristaLeve = {
   telefone: string
   whatsapp: string | null
+  provincia?: string | null
   praca: string
+  rotaDestino?: string | null
   tipoViatura: string
   modelo: string | null
   ano: number | null
@@ -32,7 +34,9 @@ export function paraVerificacaoValores(
     nome: user.name,
     telefone: motorista?.telefone ?? '',
     whatsapp: motorista?.whatsapp ?? '',
+    provincia: motorista?.provincia ?? '',
     praca: motorista?.praca || '',
+    rotaDestino: motorista?.rotaDestino ?? '',
     tipoViatura: motorista?.tipoViatura ?? '',
     modelo: motorista?.modelo ?? '',
     ano: motorista?.ano ? String(motorista.ano) : '',

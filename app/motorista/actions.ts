@@ -5,7 +5,7 @@ import { revalidatePath } from 'next/cache'
 import { after } from 'next/server'
 import { prisma } from '@/lib/db'
 import { getSession } from '@/lib/session'
-import { PRACAS, SERVICOS } from '@/lib/freta'
+import { PROVINCIAS, PRACAS, SERVICOS, pracasDaProvincia, type PracaValue } from '@/lib/freta'
 import { deleteUploadedImage } from '@/lib/uploadthing'
 import { sendVerificationSubmittedEmail } from '@/lib/email'
 
@@ -61,7 +61,12 @@ const verificacaoSchema = z
       .min(9, 'Indique um telefone válido (ex.: 84 123 4567).')
       .max(20),
     whatsapp: z.string().max(20).optional().or(z.literal('')),
+    provincia: z.enum(PROVINCIAS, { message: 'Escolha a província.' }),
     praca: z.enum(PRACAS, { message: 'Escolha a praça.' }),
+    rotaDestino: z
+      .enum(PRACAS, { message: 'Praça de destino inválida.' })
+      .optional()
+      .or(z.literal('')),
     tipoViatura: z.string().min(2, 'Indique o tipo de carro.').max(80),
     modelo: z.string().max(80).optional().or(z.literal('')),
     ano: z.string().max(4).optional().or(z.literal('')),
@@ -85,6 +90,14 @@ const verificacaoSchema = z
     fotoTraseiraUrl: urlOuVazio,
   })
   .superRefine((data, ctx) => {
+    // Praça tem de pertencer à província escolhida (select em cascata).
+    if (!pracasDaProvincia(data.provincia).includes(data.praca as PracaValue)) {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['praca'],
+        message: 'A praça não pertence à província escolhida.',
+      })
+    }
     if (data.ano) {
       const max = new Date().getFullYear() + 1
       const n = Number(data.ano)
@@ -141,7 +154,9 @@ export async function submeterVerificacaoAction(
     nome: str('nome'),
     telefone: str('telefone'),
     whatsapp: str('whatsapp'),
+    provincia: formData.get('provincia') as string,
     praca: formData.get('praca') as string,
+    rotaDestino: str('rotaDestino'),
     tipoViatura: str('tipoViatura'),
     modelo: str('modelo'),
     ano: str('ano'),
@@ -208,7 +223,11 @@ export async function submeterVerificacaoAction(
     const dados = {
       telefone: perfil.telefone,
       whatsapp: perfil.whatsapp || null,
+      provincia: perfil.provincia,
       praca: perfil.praca,
+      // Rota opcional: parte da base (praça) para o destino escolhido.
+      rotaOrigem: perfil.rotaDestino ? perfil.praca : null,
+      rotaDestino: perfil.rotaDestino || null,
       tipoViatura: perfil.tipoViatura,
       modelo: perfil.modelo || null,
       ano: perfil.ano ? Number(perfil.ano) : null,

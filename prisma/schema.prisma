@@ -79,6 +79,14 @@ model Motorista {
   userId String @unique
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
+  // Base do motorista: província (seleccionada no cadastro) + praça.
+  // Default só para linhas antigas — o formulário sempre envia a província.
+  provincia     String @default("Maputo")
+  // Rota opcional que o motorista vai fazer (ex.: de Maputo para Matola) —
+  // pedidos com origem/destino compatíveis são priorizados na distribuição.
+  rotaOrigem    String?
+  rotaDestino   String?
+
   fotoUrl        String?
   telefone       String // usado no botão "Ligar"
   whatsapp       String? // usado no botão "WhatsApp" (fallback: telefone)
@@ -137,12 +145,20 @@ model Pedido {
 
   tipoCarga      String // mudanca | mercadoria | moveis | construcao | pesada | outro
   praca          String // praça de origem (para filtrar motoristas)
+  pracaDestino   String? // praça/destino estruturado (opcional) — matching de rota
   origem         String // detalhe da origem (bairro, rua)
   destino        String // para onde vai
   veiculoSugerido String?
   contacto       String? // telefone opcional do cliente
-  motoristaId    Int?      // motorista específico contactado
+
+  // Ciclo de vida: aberto → em_curso (motorista entrou em contacto) →
+  // concluido; "não deu certo" volta a aberto para outros motoristas.
+  status         String     @default("aberto") // aberto | em_curso | concluido | cancelado
+  motoristaId    Int?       // motorista com o pedido em curso
   motorista      Motorista? @relation(fields: [motoristaId], references: [id], onDelete: SetNull)
+  atribuidoEm    DateTime?
+  concluidoEm    DateTime?
+  tentativas     Int        @default(0) // motoristas que já entraram em contacto
 
   criadoEm       DateTime  @default(now())
 

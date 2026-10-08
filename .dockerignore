@@ -1,0 +1,24 @@
+# Contexto de build mínimo — nada de artefactos locais a poluir a imagem.
+.git
+.github
+.next
+node_modules
+npm-debug.log*
+*.tsbuildinfo
+
+# Segredos locais nunca entram na imagem (os ARGs do builder mandam).
+.env
+.env.*
+
+# Editor / SO / directorias de agentes (contêm symlinks que quebram o contexto)
+.vscode
+.idea
+.DS_Store
+.agents
+.claude
+.windsurf
+skills-lock.json
+next-env.d.ts
+
+Dockerfile
+docker-compose*.yml
