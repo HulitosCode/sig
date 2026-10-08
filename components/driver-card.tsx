@@ -53,9 +53,9 @@ export function DriverCard({ motorista, pedidoId }: DriverCardProps) {
     .toUpperCase();
 
   function registarContacto(canal: "telefone" | "whatsapp") {
-    if (!pedidoId) return
-    // Fire-and-forget: associa o pedido ao motorista contactado.
-    void recordContactAction(pedidoId, motorista.id, canal)
+    // Fire-and-forget: associa o pedido (quando existe) e actualiza o
+    // histórico de contactos do cliente na BD.
+    void recordContactAction(pedidoId ?? null, motorista.id, canal);
   }
 
   const telefone = normalizarTelefone(motorista.telefone)
@@ -106,10 +106,12 @@ export function DriverCard({ motorista, pedidoId }: DriverCardProps) {
               <span className="flex items-center gap-2 font-semibold">
                 {motorista.nome}
                 {/* Selo de perfil verificado (visível para os clientes). */}
-                <span className="inline-flex items-center gap-1 rounded-full border border-primary/50 bg-primary/15 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-primary-text">
-                  <BadgeCheck className="size-3" />
-                  Verificado
-                </span>
+                {(motorista.status ?? "ativo") === "ativo" && (
+                  <span className="inline-flex items-center gap-1 rounded-full border border-primary/50 bg-primary/15 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-primary-text">
+                    <BadgeCheck className="size-3" />
+                    Verificado
+                  </span>
+                )}
               </span>
               <Badge
                 variant="outline"

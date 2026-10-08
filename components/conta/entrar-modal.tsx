@@ -86,7 +86,11 @@ export function EntrarModal({
         const role =
           (data?.user as { role?: string } | undefined)?.role ?? "motorista";
         const destino =
-          role === "admin" ? "/admin" : role === "cliente" ? "/" : "/motorista";
+          role === "admin"
+            ? "/admin"
+            : role === "cliente"
+              ? "/cliente"
+              : "/motorista";
 
         toast.success("Bem-vindo(a) de volta!");
         setAberto(false);

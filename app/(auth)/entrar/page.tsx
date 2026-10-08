@@ -76,7 +76,7 @@ function EntrarForm() {
             : role === "admin"
               ? "/admin"
               : role === "cliente"
-                ? "/"
+                ? "/cliente"
                 : "/motorista";
 
         toast.success("Bem-vindo(a) de volta!");

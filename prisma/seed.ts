@@ -112,13 +112,27 @@ async function createMotorista(opts: {
 }
 
 async function main() {
-  // Admin inicial (credenciais de .env)
+  // Admin inicial (credenciais de .env / env vars do container:
+  // ADMIN_EMAIL e ADMIN_SENHA — idempotente, não duplica existentes).
   await createUserWithPassword({
     name: 'Administração FRETA',
     email: process.env.ADMIN_EMAIL || 'admin@freta.co.mz',
     password: process.env.ADMIN_SENHA || 'admin123',
     role: 'admin',
   })
+
+  // Dados de teste (motoristas/pedidos/avaliações de exemplo): apenas fora
+  // de produção, ou com SEED_DEMO=1 explícito. Em produção o seed cria só
+  // a conta de admin — sem perfis falsos na base de dados real.
+  const comDadosDemo =
+    process.env.SEED_DEMO === '1' || process.env.NODE_ENV !== 'production'
+
+  if (!comDadosDemo) {
+    console.log('• Dados de demo omitidos (produção). Defina SEED_DEMO=1 para os criar.')
+    console.log('\nSeed concluído.')
+    console.log(`Admin: ${process.env.ADMIN_EMAIL || 'admin@freta.co.mz'} / ${process.env.ADMIN_SENHA || 'admin123'}`)
+    return
+  }
 
   // Motoristas de exemplo (para testar a pesquisa)
   const carlos = await createMotorista({

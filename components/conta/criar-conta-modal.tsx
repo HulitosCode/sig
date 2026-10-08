@@ -135,10 +135,10 @@ export function CriarContaModal({
         toast.success(
           tipo === "motorista"
             ? "Conta criada! Complete a verificação no seu painel."
-            : "Conta criada! Bem-vindo(a) à FRETA."
+            : "Conta criada! Veja os motoristas disponíveis no seu painel."
         );
         setAberto(false);
-        router.push(tipo === "motorista" ? "/motorista" : "/");
+        router.push(tipo === "motorista" ? "/motorista" : "/cliente");
         router.refresh();
       } catch (err) {
         console.error("[Registo] Falha no signup:", err);

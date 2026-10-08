@@ -26,6 +26,7 @@ model User {
   motorista Motorista?
   sessions  Session[]
   accounts  Account[]
+  contactos Contacto[]
 }
 
 model Session {
@@ -123,6 +124,7 @@ model Motorista {
   pagamentos Pagamento[]
   avaliacoes Avaliacao[]
   pedidos    Pedido[]
+  contactos  Contacto[]
 }
 
 model Pagamento {
@@ -179,5 +181,24 @@ model Avaliacao {
   comentario  String?
   criadoEm    DateTime  @default(now())
 
+  @@index([motoristaId])
+}
+
+// Histórico de contactos do cliente: regista que um cliente (sessão iniciada)
+// ligou/mandou mensagem a um motorista. Alimenta o painel do cliente
+// ("motoristas com quem já entrou em contacto"). Um registo por par
+// cliente+motorista — contactos repetidos actualizam o canal e a data.
+model Contacto {
+  id           Int       @id @default(autoincrement())
+  clienteId    String
+  cliente      User      @relation(fields: [clienteId], references: [id], onDelete: Cascade)
+  motoristaId  Int
+  motorista    Motorista @relation(fields: [motoristaId], references: [id], onDelete: Cascade)
+  pedidoId     Int? // pedido da pesquisa que originou o contacto (opcional)
+  canal        String // telefone | whatsapp
+  criadoEm     DateTime  @default(now())
+  atualizadoEm DateTime  @updatedAt
+
+  @@unique([clienteId, motoristaId])
   @@index([motoristaId])
 }

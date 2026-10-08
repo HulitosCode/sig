@@ -22,9 +22,14 @@ ENV NEXT_TELEMETRY_DISABLED=1
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
-ARG DATABASE_URL
-ARG BETTER_AUTH_URL
-ARG BETTER_AUTH_SECRET
+# Defaults de build: plataformas como o Easypanel podem não passar
+# --build-arg (só GIT_SHA), e o `next build` importa código que valida estes
+# envs (lib/db.ts e better-auth em produção). Estes valores são APENAS para
+# o build não falhar — não chegam ao runner; os reais passam-se em runtime
+# com docker run -e / variáveis da plataforma.
+ARG DATABASE_URL=postgresql://placeholder:placeholder@localhost:5432/freta
+ARG BETTER_AUTH_URL=http://localhost:3000
+ARG BETTER_AUTH_SECRET=placeholder-build-next-nao-usar-em-producao-1234
 ARG NEXT_PUBLIC_BASE_URL
 ARG UPLOADTHING_TOKEN
 ARG ADMIN_EMAIL
@@ -62,6 +67,9 @@ COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/.next ./.next
 COPY --from=builder /app/public ./public
 COPY --from=builder /app/prisma ./prisma
+# Cliente Prisma gerado (lib/generated): o seed do entrypoint
+# (prisma/seed.ts) importa ../lib/generated/prisma/client em runtime.
+COPY --from=builder /app/lib/generated ./lib/generated
 COPY --from=builder /app/scripts ./scripts
 COPY --from=builder /app/package.json ./package.json
 COPY --from=builder /app/next.config.ts ./next.config.ts

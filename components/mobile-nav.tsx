@@ -87,13 +87,22 @@ export function MobileNav({ user }: { user: MobileNavUser }) {
                   </Button>
                 )}
                 {user.role === "cliente" && (
-                  <Button
-                    variant="outline"
-                    render={<Link href="/encontrar" />}
-                    onClick={fechar}
-                  >
-                    <Search className="size-4" /> Encontrar motorista
-                  </Button>
+                  <>
+                    <Button
+                      variant="outline"
+                      render={<Link href="/cliente" />}
+                      onClick={fechar}
+                    >
+                      <LayoutDashboard className="size-4" /> Painel do cliente
+                    </Button>
+                    <Button
+                      variant="outline"
+                      render={<Link href="/encontrar" />}
+                      onClick={fechar}
+                    >
+                      <Search className="size-4" /> Encontrar motorista
+                    </Button>
+                  </>
                 )}
                 {user.role === "admin" && (
                   <Button

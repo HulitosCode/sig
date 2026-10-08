@@ -4,6 +4,7 @@ import { z } from 'zod'
 import { revalidatePath } from 'next/cache'
 import { headers } from 'next/headers'
 import { prisma } from '@/lib/db'
+import { getSession } from '@/lib/session'
 import { rateLimit, extractClientIp } from '@/lib/rate-limit'
 import { SERVICOS, PRACAS } from '@/lib/freta'
 
@@ -19,6 +20,8 @@ export type MotoristaResultado = {
   telefone: string
   whatsapp: string | null
   disponibilidade: string
+  // Opcional: presente nos painéis (contactados podem não estar activos).
+  status?: string
   servicos: string[]
   notaMedia: number
   totalAvaliacoes: number
@@ -170,9 +173,12 @@ export async function searchMotoristasAction(
   }
 }
 
-// Regista que o cliente contactou um motorista (associado ao pedido).
+// Regista que o cliente contactou um motorista.
+// - Com pedido (pesquisa em /encontrar): associa o motorista ao pedido.
+// - Com sessão de cliente: alimenta o histórico de contactos do painel
+//   (/cliente — "motoristas com quem já entrou em contacto").
 export async function recordContactAction(
-  pedidoId: number,
+  pedidoId: number | null,
   motoristaId: number,
   canal: 'telefone' | 'whatsapp'
 ): Promise<{ ok: boolean }> {
@@ -183,11 +189,36 @@ export async function recordContactAction(
   }
 
   try {
-    await prisma.pedido.update({
-      where: { id: pedidoId },
-      data: { motoristaId },
-    })
-    void canal
+    if (pedidoId) {
+      await prisma.pedido.update({
+        where: { id: pedidoId },
+        data: { motoristaId },
+      })
+    }
+
+    // Histórico por cliente (só com sessão; anónimos ficam só no pedido).
+    const session = await getSession()
+    const role = session?.user?.role
+    if (session?.user && (role === 'cliente' || role === 'admin')) {
+      await prisma.contacto.upsert({
+        where: {
+          clienteId_motoristaId: {
+            clienteId: session.user.id,
+            motoristaId,
+          },
+        },
+        // @updatedAt coloca a data do último contacto automaticamente.
+        update: { canal, ...(pedidoId ? { pedidoId } : {}) },
+        create: {
+          clienteId: session.user.id,
+          motoristaId,
+          pedidoId: pedidoId ?? null,
+          canal,
+        },
+      })
+      revalidatePath('/cliente')
+    }
+
     return { ok: true }
   } catch {
     return { ok: false }

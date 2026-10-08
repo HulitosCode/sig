@@ -16,8 +16,9 @@ export async function proxy(request: NextRequest) {
 
   const isMotorista = pathname.startsWith('/motorista')
   const isAdmin = pathname.startsWith('/admin')
+  const isCliente = pathname.startsWith('/cliente')
 
-  if (!isMotorista && !isAdmin) {
+  if (!isMotorista && !isAdmin && !isCliente) {
     return NextResponse.next()
   }
 
@@ -46,6 +47,18 @@ export async function proxy(request: NextRequest) {
   // Área admin: exigir papel admin.
   if (isAdmin && session.user.role !== 'admin') {
     return NextResponse.redirect(new URL('/', request.url))
+  }
+
+  const role = session.user.role ?? 'motorista'
+
+  // Área do cliente: só clientes (e admin); um motorista vai ao seu painel.
+  if (isCliente && role !== 'cliente' && role !== 'admin') {
+    return NextResponse.redirect(new URL('/motorista', request.url))
+  }
+
+  // O painel do motorista não é para clientes — levam-no ao seu painel.
+  if (isMotorista && role === 'cliente') {
+    return NextResponse.redirect(new URL('/cliente', request.url))
   }
 
   return NextResponse.next()

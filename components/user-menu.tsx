@@ -51,6 +51,7 @@ export function UserMenu({ user }: { user: MenuUser }) {
   }
 
   const isAdmin = user.role === "admin";
+  const isCliente = user.role === "cliente";
 
   return (
     <>
@@ -95,10 +96,17 @@ export function UserMenu({ user }: { user: MenuUser }) {
             <DropdownMenuLabel className="text-xs text-muted-foreground">
               A minha conta
             </DropdownMenuLabel>
-            <DropdownMenuItem render={<Link href="/motorista" />}>
-              <LayoutDashboard className="size-4" />
-              Painel do motorista
-            </DropdownMenuItem>
+            {isCliente ? (
+              <DropdownMenuItem render={<Link href="/cliente" />}>
+                <LayoutDashboard className="size-4" />
+                Painel do cliente
+              </DropdownMenuItem>
+            ) : (
+              <DropdownMenuItem render={<Link href="/motorista" />}>
+                <LayoutDashboard className="size-4" />
+                Painel do motorista
+              </DropdownMenuItem>
+            )}
             {isAdmin && (
               <DropdownMenuItem render={<Link href="/admin" />}>
                 <ShieldCheck className="size-4" />
